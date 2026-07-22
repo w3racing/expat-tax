@@ -104,7 +104,7 @@ function refreshYear(year: TaxYearRecord, counts: AtoRefreshSummary): TaxYearRec
     if (!parts) return row
     const ato = lookupAtoRateForMonth('USD', parts.year, parts.month)
     if (!ato) {
-      if (!(row.usdAudRate > 0) && row.usdAudFromAto !== false) counts.pendingStillMissing += 1
+      if (!(row.usdAudRate > 0)) counts.pendingStillMissing += 1
       return row
     }
     if (row.usdAudRate === ato.unitsPerAud && row.usdAudFromAto) return row
