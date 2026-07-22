@@ -1,0 +1,46 @@
+---
+description: AJX Tax MVP overnight loop — no AI/OCR/Drive/roster parsing until complete
+alwaysApply: true
+---
+
+# AJX Tax — MVP overnight workflow
+
+Before implementing any feature or screen, follow `docs/architecture/adr/024-overnight-workflow-mvp-foundation.md`, `docs/features/overnight-workflow-mvp.md`, and `docs/features/mvp-completion-gate.md`.
+
+## Philosophy
+
+**Simple. Reliable. Fast. Audit-ready.**
+
+Prioritise polish, stability, and usability over additional features. First release must feel polished and complete even when advanced automation is deferred.
+
+## MVP complete when the user can
+
+1. Create or select a financial year.
+2. Enter overnight counts manually by destination and month.
+3. Upload supporting evidence.
+4. Create destination sample days.
+5. Enter receipts.
+6. Complete sample days.
+7. Calculate destination averages (traceable).
+8. Produce a complete Tax Position (overnight claim + provenance).
+9. Export an accountant summary.
+10. Backup and restore data.
+
+## Do not begin until MVP is complete
+
+- AI / OCR classification
+- Google Drive sync
+- Roster interpretation / parsing
+
+Stubs/adapters may exist with clear “coming later” messaging — never as dependencies.
+
+## Non-negotiable product rules
+
+- **Overnight table** = source of truth for overnight counts.
+- **Roster** = evidence only.
+- **Do not** redesign into a generic expense tracker.
+- Tax Position displays the overnight-derived claim with full provenance (U11–U12).
+
+## Also required
+
+Product & engineering standards (`docs/standards/00-overview.md`, ADR-020) and commercial expansion (`docs/architecture/14-commercial-expansion.md`).

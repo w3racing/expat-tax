@@ -1,0 +1,87 @@
+{
+  "exportVersion": "1.0",
+  "exportedAt": "2026-06-30T10:00:00.000Z",
+  "app": "ajx-tax",
+  "appVersion": "1.4.2",
+  "profile": {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "displayName": "Alex Pilot",
+    "email": "alex@example.com"
+  },
+  "employers": [
+    {
+      "id": "22222222-2222-2222-2222-222222222222",
+      "name": "Qantas Airways",
+      "abn": "16009661901"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "33333333-3333-3333-3333-333333333333",
+      "financialYear": "2025-26",
+      "type": "receipt",
+      "title": "Airport coffee",
+      "occurredOn": "2026-03-12",
+      "amount": 42.5,
+      "currency": "AUD",
+      "merchant": "Qantas Club",
+      "checksumSha256": "abc123checksum",
+      "fileName": "coffee.jpg",
+      "mimeType": "image/jpeg",
+      "tags": ["meal"]
+    },
+    {
+      "id": "44444444-4444-4444-4444-444444444444",
+      "financialYear": "2025-26",
+      "type": "roster",
+      "title": "March roster",
+      "occurredOn": "2026-03-01",
+      "fileName": "roster.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "payslips": [
+    {
+      "id": "55555555-5555-5555-5555-555555555555",
+      "employerId": "22222222-2222-2222-2222-222222222222",
+      "financialYear": "2025-26",
+      "periodStart": "2026-03-01",
+      "periodEnd": "2026-03-14",
+      "gross": 4200,
+      "taxWithheld": 980,
+      "net": 3220
+    }
+  ],
+  "trips": [
+    {
+      "id": "66666666-6666-6666-6666-666666666666",
+      "title": "SYD–LAX pairing",
+      "financialYear": "2025-26",
+      "startsOn": "2026-03-10",
+      "endsOn": "2026-03-14",
+      "purpose": "work"
+    }
+  ],
+  "claims": [
+    {
+      "id": "77777777-7777-7777-7777-777777777777",
+      "financialYear": "2025-26",
+      "category": "work_travel",
+      "label": "Meals while travelling",
+      "evidenceIds": ["33333333-3333-3333-3333-333333333333"]
+    }
+  ],
+  "notes": [
+    {
+      "id": "88888888-8888-8888-8888-888888888888",
+      "body": "Uniform allowance discussed with accountant",
+      "financialYear": "2025-26"
+    }
+  ],
+  "tags": [
+    {
+      "id": "99999999-9999-9999-9999-999999999999",
+      "name": "meal"
+    }
+  ]
+}

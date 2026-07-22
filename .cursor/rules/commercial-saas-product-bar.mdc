@@ -1,0 +1,31 @@
+---
+description: AJX Tax is commercial SaaS — proud-to-show bar; four product questions before any feature
+alwaysApply: true
+---
+
+# AJX Tax — Commercial SaaS product bar
+
+Treat AJX Tax as a **commercial SaaS product**, not an internal tool.
+
+Every screen should be something you would be **proud to show another professional pilot**.
+
+Follow `docs/standards/05-commercial-product-bar.md`.
+
+## Before implementing any feature, ask
+
+1. Does this make the user’s **annual tax preparation simpler**?
+2. Does it **reduce effort**?
+3. Does it **improve trust**?
+4. Does it **improve audit readiness**?
+
+If the answer to any is **no**, reconsider. Do **not** add complexity unless it clearly improves the product.
+
+## First release
+
+Must feel **polished, professional, and complete**, even when AI / OCR / Drive / roster parsing are intentionally deferred.
+
+Prefer finishing the overnight claim loop (clarity, provenance, backup, export) over new surfaces.
+
+## Product feel
+
+Calm · clear · premium (Apple · Stripe · Linear · Flighty). No unfinished placeholders in the happy path. No spreadsheet-first UI. No unexplained numbers.

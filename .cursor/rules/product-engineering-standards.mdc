@@ -1,0 +1,51 @@
+---
+description: AJX Tax product & engineering standards — premium SaaS quality gates
+alwaysApply: true
+---
+
+# AJX Tax — Product & engineering standards
+
+Before implementing any feature or screen, follow `docs/standards/00-overview.md`, `docs/standards/05-commercial-product-bar.md`, and ADR-020.
+
+## Commercial bar
+
+Treat AJX Tax as **commercial SaaS**, not an internal tool. Every screen should be something you would be **proud to show another professional pilot**.
+
+Ask before building:
+
+1. Simpler annual tax preparation?
+2. Less effort?
+3. More trust?
+4. More audit readiness?
+
+If no — reconsider. Do not add complexity unless it clearly improves the product.
+
+## Priorities
+
+Simplicity · Clarity · Reliability · Trust. Premium commercial SaaS feel (Apple · Stripe · Linear · Notion · Flighty).
+
+## Non-negotiable gates (U1–U15)
+
+1. Every screen/region: **skeleton** loading (not blank or spinner-only).
+2. Every empty page: attractive **empty state** + guidance + CTA.
+3. Every **destructive** action: confirmation (typing gate if high-impact).
+4. Every **long-running** task: progress / phase status.
+5. Every **upload**: status + **retry** on failure.
+6. Every **error**: clear, actionable, non-technical (map codes in shared catalogue).
+7. Forms: **auto-save drafts** where appropriate; show Saving/Saved.
+8. Major reversible actions: **undo** where practical (real API revert).
+9. Every uploaded document: **processing status** (queued → ready/failed).
+10. Every AI suggestion: **confidence** + short **why**.
+11. Every calculation: **traceable** to source documents (or show missing inputs).
+12. Every financial figure: **audit trail** (source, FX, actor, time).
+13. Every screen: fully **responsive** + **keyboard accessible**.
+14. **Dark** and **Light** mode from day one via semantic tokens only.
+15. Performance for **hundreds of thousands** of records / many years — keyset pagination, snapshots, virtualization; never load full history into the client.
+
+## Implementation rules
+
+- Compose shared primitives (`Skeleton`, `EmptyState`, `ConfirmDialog`, `JobProgress`, `UploadStatus`, `ErrorBanner`, `DraftStatus`, `UndoToast`) — do not reimplement per feature.
+- Use [Definition of done](docs/standards/04-definition-of-done.md) on every PR.
+- Feature specs must include **Commercial product bar**, **Standards compliance**, and any **Standards exceptions**.
+- Never ship unexplained numbers, technical error strings, or light-only hardcoded colours.
+- Also respect commercial expansion (`docs/architecture/14-commercial-expansion.md`) — never limit scalability.

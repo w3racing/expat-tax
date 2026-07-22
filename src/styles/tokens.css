@@ -1,0 +1,141 @@
+:root {
+  /* Brand palette */
+  --ajx-mist-50: #f3f6fa;
+  --ajx-mist-100: #e7edf5;
+  --ajx-cloud: #ffffff;
+  --ajx-fog: #f7f9fc;
+  --ajx-ink-950: #0c1524;
+  --ajx-ink-700: #3d4f63;
+  --ajx-ink-500: #6b7c8f;
+  --ajx-ink-300: #a8b5c4;
+  --ajx-line: #d7e0eb;
+  --ajx-line-soft: #e8eef5;
+  --ajx-cerulean-700: #085578;
+  --ajx-cerulean-600: #0b6e99;
+  --ajx-cerulean-100: #dceff6;
+  --ajx-cerulean-50: #eff8fb;
+  --ajx-emerald-600: #1f7a4d;
+  --ajx-emerald-100: #dceee4;
+  --ajx-amber-600: #a65f00;
+  --ajx-amber-100: #f5e6cc;
+  --ajx-rose-600: #c0392b;
+  --ajx-rose-100: #f8e2df;
+
+  /* Semantic */
+  --background: var(--ajx-mist-50);
+  --foreground: var(--ajx-ink-950);
+  --muted: var(--ajx-fog);
+  --muted-foreground: var(--ajx-ink-700);
+  --card: var(--ajx-cloud);
+  --card-foreground: var(--ajx-ink-950);
+  --popover: var(--ajx-cloud);
+  --popover-foreground: var(--ajx-ink-950);
+  --border: var(--ajx-line);
+  --input: var(--ajx-line);
+  --ring: var(--ajx-cerulean-600);
+  --primary: var(--ajx-cerulean-600);
+  --primary-foreground: var(--ajx-cloud);
+  --primary-soft: var(--ajx-cerulean-100);
+  --secondary: var(--ajx-mist-100);
+  --secondary-foreground: var(--ajx-ink-950);
+  --accent: var(--ajx-cerulean-50);
+  --accent-foreground: var(--ajx-cerulean-700);
+  --success: var(--ajx-emerald-600);
+  --success-foreground: var(--ajx-cloud);
+  --success-soft: var(--ajx-emerald-100);
+  --warning: var(--ajx-amber-600);
+  --warning-foreground: var(--ajx-ink-950);
+  --warning-soft: var(--ajx-amber-100);
+  --destructive: var(--ajx-rose-600);
+  --destructive-foreground: var(--ajx-cloud);
+  --destructive-soft: var(--ajx-rose-100);
+
+  /* Typography */
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius: var(--radius-lg);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgb(12 21 36 / 0.04);
+  --shadow-sm:
+    0 1px 2px rgb(12 21 36 / 0.05), 0 4px 12px rgb(12 21 36 / 0.04);
+  --shadow-md:
+    0 2px 4px rgb(12 21 36 / 0.04), 0 12px 24px rgb(12 21 36 / 0.06);
+  --shadow-lg: 0 8px 30px rgb(12 21 36 / 0.1);
+
+  /* Overlay */
+  --overlay: rgb(12 21 36 / 0.45);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.dark {
+  --ajx-mist-50: #0c1524;
+  --ajx-mist-100: #152033;
+  --ajx-cloud: #121c2c;
+  --ajx-fog: #182436;
+  --ajx-ink-950: #f3f6fa;
+  --ajx-ink-700: #c5d0dc;
+  --ajx-ink-500: #8a9aab;
+  --ajx-ink-300: #5a6b7c;
+  --ajx-line: #2a3a4f;
+  --ajx-line-soft: #1e2c3e;
+  --ajx-cerulean-700: #7ec8e8;
+  --ajx-cerulean-600: #4ba3c7;
+  --ajx-cerulean-100: #1a3344;
+  --ajx-cerulean-50: #152a38;
+  --ajx-emerald-600: #3dba7a;
+  --ajx-emerald-100: #1a3328;
+  --ajx-amber-600: #e0a04a;
+  --ajx-amber-100: #3a2e1a;
+  --ajx-rose-600: #e07068;
+  --ajx-rose-100: #3a2220;
+
+  --background: var(--ajx-mist-50);
+  --foreground: var(--ajx-ink-950);
+  --muted: var(--ajx-fog);
+  --muted-foreground: var(--ajx-ink-700);
+  --card: var(--ajx-cloud);
+  --card-foreground: var(--ajx-ink-950);
+  --popover: var(--ajx-cloud);
+  --popover-foreground: var(--ajx-ink-950);
+  --border: var(--ajx-line);
+  --input: var(--ajx-line);
+  --ring: var(--ajx-cerulean-600);
+  --primary: var(--ajx-cerulean-600);
+  --primary-foreground: #0c1524;
+  --primary-soft: var(--ajx-cerulean-100);
+  --secondary: var(--ajx-mist-100);
+  --secondary-foreground: var(--ajx-ink-950);
+  --accent: var(--ajx-cerulean-50);
+  --accent-foreground: var(--ajx-cerulean-700);
+  --success: var(--ajx-emerald-600);
+  --success-foreground: #0c1524;
+  --success-soft: var(--ajx-emerald-100);
+  --warning: var(--ajx-amber-600);
+  --warning-foreground: #0c1524;
+  --warning-soft: var(--ajx-amber-100);
+  --destructive: var(--ajx-rose-600);
+  --destructive-foreground: #0c1524;
+  --destructive-soft: var(--ajx-rose-100);
+
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.25), 0 4px 12px rgb(0 0 0 / 0.2);
+  --shadow-md: 0 2px 4px rgb(0 0 0 / 0.2), 0 12px 24px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 8px 30px rgb(0 0 0 / 0.35);
+
+  --overlay: rgb(0 0 0 / 0.55);
+}

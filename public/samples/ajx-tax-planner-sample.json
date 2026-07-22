@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 2,
+  "destinations": [],
+  "bankAccounts": [],
+  "ratesByFy": {},
+  "activeFyEndYear": 2026,
+  "overseasAtoSalaryTable": "7",
+  "years": [
+    {
+      "fyEndYear": 2026,
+      "superannuationAud": 0,
+      "overseasDailyOverrideAud": null,
+      "includeMedicareLevy": true,
+      "monthlyIncome": [
+        {
+          "id": "inc-2025-07",
+          "monthKey": "2025-07",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2025-08",
+          "monthKey": "2025-08",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2025-09",
+          "monthKey": "2025-09",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2025-10",
+          "monthKey": "2025-10",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2025-11",
+          "monthKey": "2025-11",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2025-12",
+          "monthKey": "2025-12",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-01",
+          "monthKey": "2026-01",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-02",
+          "monthKey": "2026-02",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-03",
+          "monthKey": "2026-03",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-04",
+          "monthKey": "2026-04",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-05",
+          "monthKey": "2026-05",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        },
+        {
+          "id": "inc-2026-06",
+          "monthKey": "2026-06",
+          "incomeUsd5th": 5000,
+          "incomeUsd20th": 5000,
+          "incomeUsd": 10000,
+          "usdAudRate": 0.65,
+          "usdAudFromAto": false
+        }
+      ],
+      "monthAway": [],
+      "otherClaims": [],
+      "flights": [],
+      "transport": [],
+      "carKm": [],
+      "laundry": [],
+      "apartmentCosts": [],
+      "interestByAccount": [],
+      "dividends": [],
+      "rentalProperties": [],
+      "capitalGains": [],
+      "otherInvestments": [],
+      "notes": "Sample planner backup for MVP import"
+    }
+  ]
+}
