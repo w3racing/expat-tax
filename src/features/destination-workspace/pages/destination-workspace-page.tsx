@@ -12,6 +12,10 @@ import { useDestinationWorkspace } from '@/features/destination-workspace/hooks/
 import { DestinationStatCards } from '@/features/destination-workspace/components/destination-stat-cards'
 import { DestinationAverageBreakdown } from '@/features/destination-workspace/components/destination-average-breakdown'
 import { ClaimCalculationDialog } from '@/features/destination-workspace/components/claim-calculation-dialog'
+import {
+  useClaimOrigin,
+  withClaimOrigin,
+} from '@/features/quick-claim/utils/claim-origin'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { EmptyState } from '@/shared/components/ajx/empty-state'
 import { AppCard } from '@/shared/components/ajx/app-card'
@@ -26,20 +30,21 @@ export function DestinationWorkspacePage() {
   const { destinationId } = useParams<{ destinationId: string }>()
   const navigate = useNavigate()
   const workspace = useDestinationWorkspace(destinationId)
+  const { fromClaim, destinationsBackTo, destinationsBackLabel } = useClaimOrigin()
   const [claimOpen, setClaimOpen] = useState(false)
 
   if (!destinationId) {
-    return <Navigate replace to="/overnight" />
+    return <Navigate replace to={destinationsBackTo} />
   }
 
   if (!workspace.destination || !workspace.stats) {
     return (
       <div className="space-y-6">
         <EmptyState
-          actionLabel="Return to Overnight Planner"
-          description="This destination is not in the overnight planner for the active financial year."
+          actionLabel={fromClaim ? 'Back to Destinations' : 'Return to Overnight Planner'}
+          description="This destination is not in your destination list for the active financial year."
           title="Destination not found"
-          onAction={() => navigate('/overnight')}
+          onAction={() => navigate(destinationsBackTo)}
         />
       </div>
     )
@@ -52,13 +57,14 @@ export function DestinationWorkspacePage() {
       id: 'new-sample',
       label: 'New Sample Day',
       icon: <Plus className="size-4" />,
-      onSelect: () => workspace.createAndOpenSampleDay(),
+      onSelect: () => workspace.createAndOpenSampleDay(fromClaim),
     },
     {
       id: 'view-samples',
       label: 'View Sample Days',
       icon: <CalendarDays className="size-4" />,
-      onSelect: () => navigate(`/overnight/${destinationId}/sample-days`),
+      onSelect: () =>
+        navigate(withClaimOrigin(`/overnight/${destinationId}/sample-days`, fromClaim)),
     },
     {
       id: 'upload',
@@ -75,9 +81,9 @@ export function DestinationWorkspacePage() {
     },
     {
       id: 'back',
-      label: 'Return to Overnight Planner',
+      label: fromClaim ? 'Back to Destinations' : 'Return to Overnight Planner',
       icon: <ArrowLeft className="size-4" />,
-      onSelect: () => navigate('/overnight'),
+      onSelect: () => navigate(destinationsBackTo),
     },
   ]
 
@@ -86,19 +92,24 @@ export function DestinationWorkspacePage() {
       <PageHeader
         actions={
           <Button asChild size="sm" variant="ghost">
-            <Link to="/overnight">
+            <Link to={destinationsBackTo}>
               <ArrowLeft className="size-4" />
-              Planner
+              {destinationsBackLabel}
             </Link>
           </Button>
         }
-        description={`${fyLabel} · Home for overnight activity, sample days, evidence, and claim for this destination.`}
+        description={
+          fromClaim
+            ? `${fyLabel} · Add sample days for meals and incidentals at this destination.`
+            : `${fyLabel} · Home for overnight activity, sample days, evidence, and claim for this destination.`
+        }
         title={destination.name}
       />
 
       <SoftBanner tone="info">
-        Qualifying overnights come from the overnight planner. When you complete sample days, the
-        average daily spend updates the claim automatically — Tax Position stays in step.
+        {fromClaim
+          ? 'Create a sample day, enter receipts, then complete it — the destination average and Tax Position update automatically.'
+          : 'Qualifying overnights come from the overnight planner. When you complete sample days, the average daily spend updates the claim automatically — Tax Position stays in step.'}
       </SoftBanner>
 
       <DestinationStatCards stats={stats} />
@@ -122,10 +133,28 @@ export function DestinationWorkspacePage() {
         {stats.qualifyingOvernights === 0 ? (
           <p className="text-sm text-muted-foreground">
             No overnight counts yet for {destination.name}.{' '}
-            <Link className="font-medium text-primary underline-offset-2 hover:underline" to="/overnight">
-              Enter nights in the Overnight Planner
-            </Link>
-            .
+            {fromClaim ? (
+              <>
+                Counts live in the{' '}
+                <Link
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                  to="/overnight"
+                >
+                  Overnight tab
+                </Link>
+                . You can still add sample days now.
+              </>
+            ) : (
+              <>
+                <Link
+                  className="font-medium text-primary underline-offset-2 hover:underline"
+                  to="/overnight"
+                >
+                  Enter nights in the Overnight Planner
+                </Link>
+                .
+              </>
+            )}
           </p>
         ) : stats.sampleDaysCompleted === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -141,7 +170,7 @@ export function DestinationWorkspacePage() {
           </p>
         )}
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => workspace.createAndOpenSampleDay()}>
+          <Button size="sm" onClick={() => workspace.createAndOpenSampleDay(fromClaim)}>
             <Plus className="size-4" />
             New Sample Day
           </Button>

@@ -41,11 +41,14 @@ export function buildClaimReviewLines(year: TaxYearRecord): ClaimReviewLine[] {
   }
 
   for (const c of year.transport) {
+    const kindLabel = c.kind
+      ? c.kind.charAt(0).toUpperCase() + c.kind.slice(1)
+      : 'Transport'
     lines.push({
       id: c.id,
       category: 'transport',
       dateYmd: c.dateYmd,
-      description: c.description?.trim() || 'Transport',
+      description: c.description?.trim() || kindLabel,
       amountAud: claimAud(c.localAmount, c.exchangeRate, c.workPercentage, {
         manualAud: c.manualAud,
         amountAud: c.audAmount,

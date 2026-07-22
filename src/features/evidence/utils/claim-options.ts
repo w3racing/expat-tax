@@ -26,9 +26,12 @@ export function listClaimOptions(fyEndYear: number): EvidenceClaimOption[] {
     })
   }
   for (const c of year.transport) {
+    const kindLabel = c.kind
+      ? c.kind.charAt(0).toUpperCase() + c.kind.slice(1)
+      : 'Transport'
     options.push({
       id: c.id,
-      label: [c.dateYmd, c.description?.trim() || `Transport (${c.currencyCode})`]
+      label: [c.dateYmd, c.description?.trim() || `${kindLabel} (${c.currencyCode})`]
         .filter(Boolean)
         .join(' · '),
     })

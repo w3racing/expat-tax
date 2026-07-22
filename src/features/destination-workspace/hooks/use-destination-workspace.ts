@@ -105,13 +105,17 @@ export function useDestinationWorkspace(destinationId: string | undefined) {
     refresh()
   }, [destinationId, fyEndYear, persistPlanner, refresh])
 
-  const createAndOpenSampleDay = useCallback(() => {
-    if (!destinationId) return null
-    const day = createSampleDay({ destinationId, fyEndYear })
-    refresh()
-    navigate(`/overnight/${destinationId}/sample-days/${day.id}`)
-    return day
-  }, [destinationId, fyEndYear, navigate, refresh])
+  const createAndOpenSampleDay = useCallback(
+    (fromClaim = false) => {
+      if (!destinationId) return null
+      const day = createSampleDay({ destinationId, fyEndYear })
+      refresh()
+      const path = `/overnight/${destinationId}/sample-days/${day.id}`
+      navigate(fromClaim ? `${path}?from=claim` : path)
+      return day
+    },
+    [destinationId, fyEndYear, navigate, refresh],
+  )
 
   const complete = useCallback(
     (id: string) => {

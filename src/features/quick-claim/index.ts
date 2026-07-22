@@ -1,0 +1,5 @@
+export { QuickClaimHubPage } from '@/features/quick-claim/pages/quick-claim-hub-page'
+export { TransportMenuPage } from '@/features/quick-claim/pages/transport-menu-page'
+export { ApartmentMenuPage } from '@/features/quick-claim/pages/apartment-menu-page'
+export { DestinationsMenuPage } from '@/features/quick-claim/pages/destinations-menu-page'
+export { ClaimFormPage } from '@/features/quick-claim/pages/claim-form-page'

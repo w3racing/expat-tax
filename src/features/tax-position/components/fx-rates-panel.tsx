@@ -27,7 +27,8 @@ export function FxRatesPanel() {
       />
       <SoftBanner tone="info">
         Applying “Use ATO FX” on a row copies the reference rate onto that row and sets rateFromAto.
-        Historical row rates are never silently overwritten when this table updates.
+        Claims saved before a month is published stay pending until you use Settings → Refresh ATO
+        rates. Manual rates are never overwritten by that refresh.
       </SoftBanner>
       <div className="flex flex-wrap gap-2">
         {currencies.map((c) => (

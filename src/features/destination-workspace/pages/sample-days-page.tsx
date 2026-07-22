@@ -6,6 +6,10 @@ import {
   primaryCurrency,
   sampleDayTotalAud,
 } from '@/features/destination-workspace/types/sample-day'
+import {
+  useClaimOrigin,
+  withClaimOrigin,
+} from '@/features/quick-claim/utils/claim-origin'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { EmptyState } from '@/shared/components/ajx/empty-state'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
@@ -17,19 +21,22 @@ export function SampleDaysPage() {
   const { destinationId } = useParams<{ destinationId: string }>()
   const navigate = useNavigate()
   const workspace = useDestinationWorkspace(destinationId)
+  const { fromClaim, destinationsBackTo } = useClaimOrigin()
 
-  if (!destinationId) return <Navigate replace to="/overnight" />
+  if (!destinationId) return <Navigate replace to={destinationsBackTo} />
 
   if (!workspace.destination) {
     return (
       <EmptyState
-        actionLabel="Back to planner"
+        actionLabel={fromClaim ? 'Back to Destinations' : 'Back to planner'}
         description="Destination not found."
         title="Missing destination"
-        onAction={() => navigate('/overnight')}
+        onAction={() => navigate(destinationsBackTo)}
       />
     )
   }
+
+  const workspacePath = withClaimOrigin(`/overnight/${destinationId}`, fromClaim)
 
   return (
     <div className="space-y-6">
@@ -37,12 +44,12 @@ export function SampleDaysPage() {
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="ghost">
-              <Link to={`/overnight/${destinationId}`}>
+              <Link to={workspacePath}>
                 <ArrowLeft className="size-4" />
-                Workspace
+                {workspace.destination.name}
               </Link>
             </Button>
-            <Button size="sm" onClick={() => workspace.createAndOpenSampleDay()}>
+            <Button size="sm" onClick={() => workspace.createAndOpenSampleDay(fromClaim)}>
               <Plus className="size-4" />
               New Sample Day
             </Button>
@@ -62,7 +69,7 @@ export function SampleDaysPage() {
           actionLabel="New Sample Day"
           description="Pick a typical day away, enter the receipts, review the total, then complete it."
           title="No sample days yet"
-          onAction={() => workspace.createAndOpenSampleDay()}
+          onAction={() => workspace.createAndOpenSampleDay(fromClaim)}
         />
       ) : (
         <ul className="space-y-2">
@@ -76,7 +83,12 @@ export function SampleDaysPage() {
                 )}
                 type="button"
                 onClick={() =>
-                  navigate(`/overnight/${destinationId}/sample-days/${day.id}`)
+                  navigate(
+                    withClaimOrigin(
+                      `/overnight/${destinationId}/sample-days/${day.id}`,
+                      fromClaim,
+                    ),
+                  )
                 }
               >
                 <div>

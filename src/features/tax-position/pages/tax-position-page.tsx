@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
 import { FyChip } from '@/shared/components/ajx/fy-chip'
@@ -28,6 +28,12 @@ export function TaxPositionPage() {
     draftState,
     persistYear,
   } = useTaxPosition()
+  const [searchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const initialTab =
+    tabParam === 'expenses' || tabParam === 'fx' || tabParam === 'settings'
+      ? tabParam
+      : 'income'
   const fyShort = `${fyEndYear - 1}–${String(fyEndYear).slice(2)}`
   const estimate = persisted?.summary.estimatedTaxAud
 
@@ -77,25 +83,36 @@ export function TaxPositionPage() {
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline">
-          <Link to="/overnight">Overnight planner</Link>
+        <Button asChild className="min-w-[8.5rem] flex-1 sm:flex-none" variant="soft">
+          <Link to="/claim">Quick claim</Link>
         </Button>
-        <Button asChild variant="outline">
+        <Button asChild className="min-w-[8.5rem] flex-1 sm:flex-none" variant="outline">
+          <Link to="/overnight">Overnight</Link>
+        </Button>
+        <Button asChild className="hidden sm:inline-flex" variant="outline">
           <Link to="/export">Accountant export</Link>
         </Button>
-        <Button asChild variant="ghost">
+        <Button asChild className="hidden sm:inline-flex" variant="ghost">
           <Link to="/migration">Import backup</Link>
         </Button>
       </div>
 
       <OvernightClaimPanel provenance={overnightProvenance} />
 
-      <Tabs defaultValue="income">
-        <TabsList className="flex h-auto flex-wrap gap-1">
-          <TabsTrigger value="income">Income</TabsTrigger>
-          <TabsTrigger value="expenses">Other expenses</TabsTrigger>
-          <TabsTrigger value="fx">ATO FX</TabsTrigger>
-          <TabsTrigger value="settings">Year</TabsTrigger>
+      <Tabs defaultValue={initialTab} key={initialTab}>
+        <TabsList className="-mx-1 flex h-auto w-[calc(100%+0.5rem)] flex-nowrap gap-1 overflow-x-auto px-1">
+          <TabsTrigger className="shrink-0 flex-none px-3.5" value="income">
+            Income
+          </TabsTrigger>
+          <TabsTrigger className="shrink-0 flex-none px-3.5" value="expenses">
+            Other expenses
+          </TabsTrigger>
+          <TabsTrigger className="shrink-0 flex-none px-3.5" value="fx">
+            ATO FX
+          </TabsTrigger>
+          <TabsTrigger className="shrink-0 flex-none px-3.5" value="settings">
+            Year
+          </TabsTrigger>
         </TabsList>
         <TabsContent className="pt-4" value="income">
           <IncomePanel year={year} onChange={persistYear} />

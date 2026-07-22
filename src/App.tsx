@@ -29,6 +29,21 @@ const TaxPositionPage = lazy(() =>
 const TaxSummaryPage = lazy(() =>
   import('@/features/tax-position').then((m) => ({ default: m.TaxSummaryPage })),
 )
+const QuickClaimHubPage = lazy(() =>
+  import('@/features/quick-claim').then((m) => ({ default: m.QuickClaimHubPage })),
+)
+const TransportMenuPage = lazy(() =>
+  import('@/features/quick-claim').then((m) => ({ default: m.TransportMenuPage })),
+)
+const ApartmentMenuPage = lazy(() =>
+  import('@/features/quick-claim').then((m) => ({ default: m.ApartmentMenuPage })),
+)
+const DestinationsMenuPage = lazy(() =>
+  import('@/features/quick-claim').then((m) => ({ default: m.DestinationsMenuPage })),
+)
+const ClaimFormPage = lazy(() =>
+  import('@/features/quick-claim').then((m) => ({ default: m.ClaimFormPage })),
+)
 const EvidencePage = lazy(() =>
   import('@/features/evidence').then((m) => ({ default: m.EvidencePage })),
 )
@@ -79,6 +94,13 @@ export function App() {
                 />
                 <Route element={<TaxPositionPage />} path="position" />
                 <Route element={<TaxSummaryPage />} path="position/summary" />
+                <Route element={<QuickClaimHubPage />} path="claim" />
+                <Route element={<TransportMenuPage />} path="claim/transport" />
+                <Route element={<ApartmentMenuPage />} path="claim/apartment" />
+                <Route element={<DestinationsMenuPage />} path="claim/destinations" />
+                <Route element={<ClaimFormPage formKey="work" />} path="claim/work" />
+                <Route element={<ClaimFormPage formKey="laundry" />} path="claim/laundry" />
+                <Route element={<ClaimFormPage />} path="claim/:category/:type" />
                 <Route element={<EvidencePage />} path="evidence" />
                 <Route element={<ExportPage />} path="export" />
                 <Route element={<SettingsPage />} path="settings" />

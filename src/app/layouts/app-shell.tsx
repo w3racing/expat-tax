@@ -4,6 +4,7 @@ import {
   Home,
   MapPinned,
   Moon,
+  Receipt,
   Settings,
   Sun,
   Upload,
@@ -20,14 +21,17 @@ import { BottomNav, SideNav, type NavItemConfig } from '@/shared/components/ajx/
 const nav: NavItemConfig[] = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/overnight', label: 'Overnight', icon: MapPinned },
+  { to: '/claim', label: 'Claim', icon: Receipt },
   { to: '/position', label: 'Position', icon: Wallet },
   { to: '/evidence', label: 'Evidence', icon: FileStack },
   { to: '/export', label: 'Export', icon: Upload },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
-/** Phone bottom bar — five primary destinations; Settings via header. */
-const mobileNav: NavItemConfig[] = nav.filter((item) => item.to !== '/settings')
+/** Phone bottom bar — five primary destinations; Export & Settings via side/header. */
+const mobileNav: NavItemConfig[] = nav.filter(
+  (item) => item.to !== '/settings' && item.to !== '/export',
+)
 
 export function AppShell() {
   const { label, fyEndYear, cycleFy } = useFy()

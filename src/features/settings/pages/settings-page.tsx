@@ -9,6 +9,8 @@ import {
   restoreAppBackup,
   type AppBackupSummary,
 } from '@/features/backup/services/app-backup'
+import { useTaxPosition } from '@/features/tax-position'
+import { refreshAtoRatesOnPlanner } from '@/features/tax-position/services/refresh-ato-rates'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { AppCard } from '@/shared/components/ajx/app-card'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
@@ -22,9 +24,12 @@ export function SettingsPage() {
   const { user, signOut, isLocalMode } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { fyEndYear, label, availableYears, setFyEndYear, createOrSelectFy } = useFy()
+  const { planner, persistPlanner, draftState } = useTaxPosition()
   const [newFyEnd, setNewFyEnd] = useState(String(fyEndYear + 1))
   const [fyError, setFyError] = useState<string | null>(null)
   const [backupMessage, setBackupMessage] = useState<string | null>(null)
+  const [fxMessage, setFxMessage] = useState<string | null>(null)
+  const [refreshingFx, setRefreshingFx] = useState(false)
   const [pendingRestore, setPendingRestore] = useState<{
     summary: AppBackupSummary
     file: File
@@ -39,6 +44,44 @@ export function SettingsPage() {
       setBackupMessage(`Active year is now ${formatFyLabel(year)}.`)
     } catch (err) {
       setFyError(err instanceof Error ? err.message : 'Could not create that year.')
+    }
+  }
+
+  const onRefreshAtoRates = () => {
+    setRefreshingFx(true)
+    setFxMessage(null)
+    try {
+      const { planner: next, summary } = refreshAtoRatesOnPlanner(planner)
+      persistPlanner(next, 'recompute')
+      const updated =
+        summary.claimRowsUpdated +
+        summary.incomeRowsUpdated +
+        summary.sampleReceiptsUpdated
+      if (updated === 0 && summary.pendingStillMissing === 0) {
+        setFxMessage('No ATO-tracked rates needed updating.')
+      } else {
+        const parts = [
+          summary.claimRowsUpdated
+            ? `${summary.claimRowsUpdated} claim${summary.claimRowsUpdated === 1 ? '' : 's'}`
+            : null,
+          summary.incomeRowsUpdated
+            ? `${summary.incomeRowsUpdated} income month${summary.incomeRowsUpdated === 1 ? '' : 's'}`
+            : null,
+          summary.sampleReceiptsUpdated
+            ? `${summary.sampleReceiptsUpdated} sample receipt${summary.sampleReceiptsUpdated === 1 ? '' : 's'}`
+            : null,
+        ].filter(Boolean)
+        const applied = parts.length > 0 ? `Updated ${parts.join(' · ')}.` : 'No rows updated.'
+        const pending =
+          summary.pendingStillMissing > 0
+            ? ` ${summary.pendingStillMissing} still waiting on a published ATO month.`
+            : ''
+        setFxMessage(`${applied}${pending}`)
+      }
+    } catch (err) {
+      setFxMessage(err instanceof Error ? err.message : 'Could not refresh ATO rates.')
+    } finally {
+      setRefreshingFx(false)
     }
   }
 
@@ -90,7 +133,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Financial year, backup, account, and appearance. Advanced automation is deferred until MVP is complete."
+        description="Financial year, ATO FX, backup, account, and appearance. Advanced automation is deferred until MVP is complete."
         title="Settings"
       />
 
@@ -127,6 +170,33 @@ export function SettingsPage() {
           </div>
           {fyError ? <p className="text-sm text-destructive">{fyError}</p> : null}
         </div>
+      </AppCard>
+
+      <AppCard className="space-y-3">
+        <p className="text-sm font-semibold">ATO exchange rates</p>
+        <p className="text-sm text-muted-foreground">
+          Apply published ATO monthly averages to claims and income that are waiting on a rate, or
+          already marked as ATO-tracked. Manual rates are left alone.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            className="w-full sm:w-auto"
+            disabled={refreshingFx}
+            variant="soft"
+            onClick={onRefreshAtoRates}
+          >
+            {refreshingFx ? 'Refreshing…' : 'Refresh ATO rates'}
+          </Button>
+          {draftState === 'saved' || draftState === 'saving' ? (
+            <span className="text-xs text-muted-foreground">
+              {draftState === 'saving' ? 'Saving…' : 'Saved'}
+            </span>
+          ) : null}
+        </div>
+        {fxMessage ? <p className="text-sm text-muted-foreground">{fxMessage}</p> : null}
+        <Button asChild variant="ghost">
+          <Link to="/position?tab=fx">View ATO FX table</Link>
+        </Button>
       </AppCard>
 
       <AppCard className="space-y-3">

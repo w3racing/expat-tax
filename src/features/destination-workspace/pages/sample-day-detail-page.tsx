@@ -36,6 +36,10 @@ import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
 import { formatAud, formatNumber } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/cn'
+import {
+  useClaimOrigin,
+  withClaimOrigin,
+} from '@/features/quick-claim/utils/claim-origin'
 
 export function SampleDayDetailPage() {
   const { destinationId, sampleDayId } = useParams<{
@@ -44,6 +48,7 @@ export function SampleDayDetailPage() {
   }>()
   const navigate = useNavigate()
   const workspace = useDestinationWorkspace(destinationId)
+  const { fromClaim, destinationsBackTo } = useClaimOrigin()
   const [day, setDay] = useState<SampleDay | null>(null)
   const [confirmComplete, setConfirmComplete] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -77,17 +82,23 @@ export function SampleDayDetailPage() {
     )
   }, [destinationId, workspace.fyEndYear, day?.updatedAt])
 
+  const sampleDaysPath = withClaimOrigin(
+    `/overnight/${destinationId}/sample-days`,
+    fromClaim,
+  )
+  const workspacePath = withClaimOrigin(`/overnight/${destinationId}`, fromClaim)
+
   if (!destinationId || !sampleDayId) {
-    return <Navigate replace to="/overnight" />
+    return <Navigate replace to={destinationsBackTo} />
   }
 
   if (!workspace.destination) {
     return (
       <EmptyState
         actionLabel="Back"
-        description="This destination is no longer in your overnight planner."
+        description="This destination is no longer in your destination list."
         title="Destination not found"
-        onAction={() => navigate('/overnight')}
+        onAction={() => navigate(destinationsBackTo)}
       />
     )
   }
@@ -98,7 +109,7 @@ export function SampleDayDetailPage() {
         actionLabel="View sample days"
         description="This sample day was removed or never saved."
         title="Sample day not found"
-        onAction={() => navigate(`/overnight/${destinationId}/sample-days`)}
+        onAction={() => navigate(sampleDaysPath)}
       />
     )
   }
@@ -118,7 +129,7 @@ export function SampleDayDetailPage() {
       <PageHeader
         actions={
           <Button asChild size="sm" variant="ghost">
-            <Link to={`/overnight/${destinationId}/sample-days`}>
+            <Link to={sampleDaysPath}>
               <ArrowLeft className="size-4" />
               All sample days
             </Link>
@@ -341,7 +352,7 @@ export function SampleDayDetailPage() {
           Delete
         </Button>
         <Button asChild variant="ghost">
-          <Link to={`/overnight/${destinationId}`}>Back to {workspace.destination.name}</Link>
+          <Link to={workspacePath}>Back to {workspace.destination.name}</Link>
         </Button>
       </div>
 
@@ -381,7 +392,7 @@ export function SampleDayDetailPage() {
         onConfirm={() => {
           workspace.remove(day.id)
           setConfirmDelete(false)
-          navigate(`/overnight/${destinationId}/sample-days`)
+          navigate(sampleDaysPath)
         }}
       />
     </div>

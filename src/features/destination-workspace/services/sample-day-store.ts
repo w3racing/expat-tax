@@ -49,6 +49,13 @@ export function listSampleDaysForFy(fyEndYear: number): SampleDay[] {
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 }
 
+/** Replace sample days for a FY (preserves days from other years). */
+export function replaceSampleDaysForFy(fyEndYear: number, days: SampleDay[]): void {
+  const store = readStore()
+  const others = store.days.filter((d) => d.fyEndYear !== fyEndYear)
+  writeStore({ days: [...days, ...others] })
+}
+
 export function getSampleDay(id: string): SampleDay | null {
   return readStore().days.find((d) => d.id === id) ?? null
 }

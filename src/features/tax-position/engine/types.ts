@@ -61,10 +61,14 @@ export type FlightClaim = {
   evidenceVersionId?: string | null
 }
 
+export type TransportKind = 'bus' | 'train' | 'taxi'
+
 export type TransportClaim = {
   id: string
   dateYmd?: string
   description?: string
+  /** Calculator / domain kind — bus, train, or taxi */
+  kind?: TransportKind
   currencyCode: string
   localAmount: number
   exchangeRate: number
@@ -95,10 +99,12 @@ export type LaundryClaim = {
   evidenceVersionId?: string | null
 }
 
+export type ApartmentKind = 'rent' | 'water' | 'gas' | 'electricity'
+
 export type ApartmentClaim = {
   id: string
   dateYmd?: string
-  kind: string
+  kind: ApartmentKind | string
   description?: string
   localAmount: number
   exchangeRate: number

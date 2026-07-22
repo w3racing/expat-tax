@@ -112,10 +112,16 @@ function normalizeYear(y: z.infer<typeof yearSchema>): TaxPlannerState['years'][
     })),
     otherClaims: y.otherClaims.map((r, i) => mapFxClaim(r, i, 'work')),
     flights: y.flights.map((r, i) => mapFxClaim(r, i, 'flight')),
-    transport: y.transport.map((r, i) => ({
-      ...mapFxClaim(r, i, 'transport'),
-      audAmount: (r as { audAmount?: number }).audAmount,
-    })),
+    transport: y.transport.map((r, i) => {
+      const rawKind = String((r as { kind?: string }).kind ?? '').toLowerCase()
+      const kind =
+        rawKind === 'bus' || rawKind === 'train' || rawKind === 'taxi' ? rawKind : undefined
+      return {
+        ...mapFxClaim(r, i, 'transport'),
+        kind,
+        audAmount: (r as { audAmount?: number }).audAmount,
+      }
+    }),
     carKm: y.carKm.map((r, i) => ({
       id: String((r as { id?: string }).id ?? `km-${i}`),
       dateYmd: pickDateYmd(r as Record<string, unknown>),

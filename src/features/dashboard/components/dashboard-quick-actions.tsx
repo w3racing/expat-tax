@@ -1,4 +1,4 @@
-import { Download, MapPinned, Settings, Upload, Wallet } from 'lucide-react'
+import { Download, MapPinned, Receipt, Settings, Upload, Wallet } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { QuickActionBar, type QuickAction } from '@/shared/components/ajx/quick-action-bar'
 import { SectionHeader } from '@/shared/components/ajx/section-header'
@@ -13,6 +13,12 @@ export function DashboardQuickActions() {
       label: 'Overnight planner',
       icon: <MapPinned className="size-4" />,
       onSelect: () => navigate('/overnight'),
+    },
+    {
+      id: 'claim',
+      label: 'Quick claim',
+      icon: <Receipt className="size-4" />,
+      onSelect: () => navigate('/claim'),
     },
     {
       id: 'upload',
