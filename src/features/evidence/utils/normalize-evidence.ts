@@ -1,6 +1,14 @@
 import type { EvidenceRecord } from '@/features/evidence/types/evidence'
 import { isEvidenceCategory } from '@/features/evidence/types/evidence'
 
+/** Local calendar date as YYYY-MM-DD (avoids UTC day-shift for AU timezones). */
+export function localDateYmd(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 /** Derive YYYY-MM from a document date or ISO timestamp. */
 export function monthKeyFromDate(dateYmdOrIso: string | null | undefined): string | null {
   if (!dateYmdOrIso?.trim()) return null
@@ -29,12 +37,15 @@ export function formatTagsInput(tags: string[]): string {
 export function normalizeEvidenceRecord(raw: EvidenceRecord & Record<string, unknown>): EvidenceRecord {
   const category =
     typeof raw.category === 'string' && isEvidenceCategory(raw.category) ? raw.category : 'other'
-  const documentDate =
+  const createdAt =
+    typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString()
+  const rawDocumentDate =
     typeof raw.documentDate === 'string' || raw.documentDate === null
       ? (raw.documentDate as string | null)
       : null
-  const createdAt =
-    typeof raw.createdAt === 'string' ? raw.createdAt : new Date().toISOString()
+  /** Prefer stored document date; otherwise default to the upload (created) day. */
+  const documentDate =
+    rawDocumentDate?.trim() || localDateYmd(new Date(createdAt))
   const monthKey =
     typeof raw.monthKey === 'string' || raw.monthKey === null
       ? (raw.monthKey as string | null) ??

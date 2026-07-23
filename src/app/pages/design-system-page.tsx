@@ -17,7 +17,7 @@ const nav = [
 export function DesignSystemPage() {
   return (
     <MotionConfig reducedMotion="user">
-      <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-28 pt-8 md:px-6 md:pb-16 md:pt-12">
+      <div className="mx-auto min-h-dvh max-w-5xl px-4 pb-8 pt-8 md:px-6 md:pb-16 md:pt-12">
         <PageHeader
           actions={<FyChip financialYear="2025-26" />}
           description="Canonical visual language for AJX Tax — clean, premium, calm, financial. Reusable components first; product pages next. Light + dark · phone · iPad · Mac."

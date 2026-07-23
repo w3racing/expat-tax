@@ -29,7 +29,7 @@ export function NavItem({ item, variant = 'side', className }: NavItemProps) {
               ? 'bg-primary-soft text-accent-foreground'
               : 'text-muted-foreground hover:bg-muted hover:text-foreground'),
           variant === 'bottom' &&
-            'flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-2 text-[0.65rem] font-medium transition-colors touch-target',
+            'flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-0.5 py-2 text-[0.65rem] font-medium transition-colors',
           variant === 'bottom' && (isActive ? 'text-primary' : 'text-muted-foreground'),
           className,
         )
@@ -37,8 +37,8 @@ export function NavItem({ item, variant = 'side', className }: NavItemProps) {
       end={item.end}
       to={item.to}
     >
-      <Icon aria-hidden className={variant === 'bottom' ? 'size-5' : 'size-4'} />
-      <span>{item.label}</span>
+      <Icon aria-hidden className={variant === 'bottom' ? 'size-5 shrink-0' : 'size-4'} />
+      <span className={variant === 'bottom' ? 'max-w-full truncate' : undefined}>{item.label}</span>
     </NavLink>
   )
 }
@@ -54,7 +54,7 @@ export function BottomNav({ items, className, 'aria-label': ariaLabel = 'Primary
     <nav
       aria-label={ariaLabel}
       className={cn(
-        'fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-card/95 px-1 py-1 backdrop-blur',
+        'z-20 flex w-full border-t border-border bg-card/95 px-1 py-1 backdrop-blur',
         'pb-[max(0.25rem,env(safe-area-inset-bottom))]',
         'md:hidden',
         className,

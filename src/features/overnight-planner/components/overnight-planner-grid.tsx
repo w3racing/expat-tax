@@ -71,13 +71,13 @@ export function OvernightPlannerGrid({
     <>
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         <div className="overflow-x-auto overscroll-x-contain">
-          <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+          <table className="w-max border-separate border-spacing-0 text-sm">
             <thead>
               <tr>
                 <th
                   className={cn(
-                    'sticky left-0 z-30 border-b border-border bg-card px-3 py-3 text-left',
-                    'min-w-[4.5rem] sm:min-w-[5.5rem]',
+                    'sticky left-0 z-30 border-b border-border bg-card px-2.5 py-3 text-left',
+                    'min-w-[3.75rem] sm:min-w-[4.25rem]',
                   )}
                   scope="col"
                 >
@@ -88,19 +88,19 @@ export function OvernightPlannerGrid({
                   return (
                     <th
                       key={dest.id}
-                      className="border-b border-border bg-card px-2 py-3 text-center align-bottom"
+                      className="w-[4.75rem] border-b border-border bg-card px-1 py-3 text-center align-bottom sm:w-[5.25rem]"
                       scope="col"
                     >
-                      <div className="mx-auto flex w-[5.5rem] flex-col items-center gap-1.5 sm:w-[6.5rem]">
+                      <div className="mx-auto flex w-full flex-col items-center gap-1.5">
                         <div className="flex w-full items-start justify-center gap-0.5">
                           <Link
-                            className="font-display text-sm font-semibold leading-tight text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                            className="min-w-0 break-words font-display text-sm font-semibold leading-tight text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
                             to={`/overnight/${dest.id}`}
                           >
                             {dest.name}
                           </Link>
                           <IconButton
-                            className="size-8 shrink-0 text-muted-foreground"
+                            className="size-7 shrink-0 text-muted-foreground"
                             label={`Remove ${dest.name}`}
                             onClick={() => setPendingDeleteId(dest.id)}
                           >
@@ -122,8 +122,8 @@ export function OvernightPlannerGrid({
                 })}
                 <th
                   className={cn(
-                    'sticky right-0 z-30 border-b border-l border-border bg-muted/80 px-3 py-3 text-right backdrop-blur-sm',
-                    'min-w-[6.5rem] sm:min-w-[7.5rem]',
+                    'sticky right-0 z-30 border-b border-l border-border bg-muted/80 px-2.5 py-3 text-right backdrop-blur-sm',
+                    'min-w-[5rem] sm:min-w-[5.5rem]',
                   )}
                   scope="col"
                 >
@@ -144,7 +144,7 @@ export function OvernightPlannerGrid({
                   <tr key={monthKey} className="group">
                     <th
                       className={cn(
-                        'sticky left-0 z-20 border-b border-border bg-card px-3 py-2 text-left',
+                        'sticky left-0 z-20 border-b border-border bg-card px-2.5 py-2 text-left',
                         'group-hover:bg-muted/40',
                       )}
                       scope="row"
@@ -159,7 +159,7 @@ export function OvernightPlannerGrid({
                     {dests.map((dest, colIndex) => (
                       <td
                         key={dest.id}
-                        className="border-b border-border bg-card px-1.5 py-1.5 group-hover:bg-muted/20"
+                        className="w-[4.75rem] border-b border-border bg-card px-1 py-1.5 group-hover:bg-muted/20 sm:w-[5.25rem]"
                       >
                         <OvernightCellInput
                           colIndex={colIndex}
@@ -176,7 +176,7 @@ export function OvernightPlannerGrid({
                     ))}
                     <td
                       className={cn(
-                        'sticky right-0 z-20 border-b border-l border-border bg-muted/70 px-3 py-2 text-right backdrop-blur-sm',
+                        'sticky right-0 z-20 border-b border-l border-border bg-muted/70 px-2.5 py-2 text-right backdrop-blur-sm',
                         'group-hover:bg-muted/90',
                       )}
                     >
@@ -196,7 +196,7 @@ export function OvernightPlannerGrid({
             <tfoot>
               <tr>
                 <th
-                  className="sticky left-0 z-20 border-t border-border bg-primary-soft/50 px-3 py-3 text-left dark:bg-primary/15"
+                  className="sticky left-0 z-20 border-t border-border bg-primary-soft/50 px-2.5 py-3 text-left dark:bg-primary/15"
                   scope="row"
                 >
                   <span className="font-display text-sm font-semibold text-foreground">FY total</span>
@@ -206,7 +206,7 @@ export function OvernightPlannerGrid({
                   return (
                     <td
                       key={dest.id}
-                      className="border-t border-border bg-primary-soft/50 px-2 py-3 text-center dark:bg-primary/15"
+                      className="w-[4.75rem] border-t border-border bg-primary-soft/50 px-1 py-3 text-center sm:w-[5.25rem] dark:bg-primary/15"
                     >
                       <div className="text-sm font-semibold tabular-nums text-foreground">
                         {formatNumber(destinationNightsTotal(monthAway, dest.id))}
@@ -217,7 +217,7 @@ export function OvernightPlannerGrid({
                     </td>
                   )
                 })}
-                <td className="sticky right-0 z-20 border-t border-l border-border bg-primary-soft px-3 py-3 text-right dark:bg-primary/25">
+                <td className="sticky right-0 z-20 border-t border-l border-border bg-primary-soft px-2.5 py-3 text-right dark:bg-primary/25">
                   <div className="font-display text-base font-semibold tabular-nums text-foreground">
                     {formatAud(fyClaim, 0)}
                   </div>

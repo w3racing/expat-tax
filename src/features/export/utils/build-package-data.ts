@@ -121,9 +121,13 @@ function evidenceGaps(
   overnight: ReturnType<typeof buildOvernightClaimProvenance>,
 ): string[] {
   const gaps: string[] = []
-  if (evidence.length === 0) gaps.push('No evidence documents uploaded for this financial year.')
+  if (evidence.length === 0) {
+    gaps.push('No supporting documents uploaded for this financial year.')
+  }
   if (claimCount > 0 && linkedCount < claimCount) {
-    gaps.push(`${claimCount - linkedCount} claim(s) have no linked evidence.`)
+    gaps.push(
+      `${claimCount - linkedCount} claim(s) have no receipt attached — often fine for small/frequent items; bank or credit card statements can support these if needed.`,
+    )
   }
   if (
     year.monthlyIncome.some((m) => m.incomeUsd > 0) &&

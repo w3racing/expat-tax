@@ -54,7 +54,7 @@ export type AccountantPackageData = {
   disclaimer: string
 }
 
-export const ACCOUNTANT_EXPORT_VERSION = 'mvp-1.1.0' as const
+export const ACCOUNTANT_EXPORT_VERSION = 'mvp-1.2.0' as const
 
 export const ACCOUNTANT_DISCLAIMER =
   'Indicative working papers prepared in AJX Tax for discussion with a registered tax agent. Not a tax return, not advice, and not suitable for lodgement with the ATO without review.'

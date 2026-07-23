@@ -13,7 +13,7 @@ export function AuthPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6">
+      <div className="mx-auto flex h-full max-w-md flex-col justify-center overflow-y-auto px-6">
         <PageSkeleton cards={2} />
       </div>
     )
@@ -24,7 +24,7 @@ export function AuthPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-8 px-6 py-12">
+    <div className="mx-auto flex h-full max-w-md flex-col justify-center gap-8 overflow-y-auto px-6 py-12">
       <div>
         <p className="font-display text-3xl font-semibold tracking-tight text-foreground">AJX Tax</p>
         <p className="mt-3 text-base text-muted-foreground">

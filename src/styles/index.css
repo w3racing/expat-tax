@@ -58,15 +58,27 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    max-width: 100%;
   }
 
   body {
-    @apply min-h-dvh bg-background font-sans text-foreground antialiased;
+    @apply h-dvh max-w-full overflow-hidden bg-background font-sans text-foreground antialiased;
     background-image:
       radial-gradient(ellipse 120% 80% at 0% -20%, rgb(11 110 153 / 0.07), transparent 55%),
       radial-gradient(ellipse 90% 60% at 100% 0%, rgb(231 237 245 / 0.9), transparent 50%),
       linear-gradient(180deg, var(--ajx-mist-50), var(--ajx-mist-50));
     background-attachment: fixed;
+  }
+
+  /* Fixed backgrounds can inflate the scrollport on mobile browsers. */
+  @media (max-width: 767px) {
+    body {
+      background-attachment: scroll;
+    }
+  }
+
+  #root {
+    @apply h-dvh min-h-0 min-w-0 max-w-full;
   }
 
   .dark body {

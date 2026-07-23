@@ -14,7 +14,7 @@ import {
   yearNightsTotal,
 } from '@/features/overnight-planner/utils/overnight-matrix'
 import { EmptyState } from '@/shared/components/ajx/empty-state'
-import { FyChip } from '@/shared/components/ajx/fy-chip'
+import { FySelect } from '@/shared/components/ajx/fy-select'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { Button } from '@/shared/components/ui/button'
 import { DraftStatus } from '@/shared/components/ui/draft-status'
@@ -24,7 +24,6 @@ export function OvernightPlannerPage() {
   const {
     fyEndYear,
     label,
-    cycleFy,
     planner,
     year,
     draftState,
@@ -43,7 +42,6 @@ export function OvernightPlannerPage() {
   const destIds = destinations.map((d) => d.id)
   const fyClaim = yearClaimAud(year.monthAway, rateMap, destIds)
   const fyNights = yearNightsTotal(year.monthAway, destIds)
-  const fyShort = `${fyEndYear - 1}–${String(fyEndYear).slice(2)}`
 
   const onNightsChange = (monthKey: string, destinationId: string, nights: number) => {
     persistYear({
@@ -107,14 +105,7 @@ export function OvernightPlannerPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <DraftStatus state={draftState} />
-            <button
-              aria-label={`Financial year ${label}. Activate to cycle years.`}
-              className="touch-target"
-              type="button"
-              onClick={cycleFy}
-            >
-              <FyChip financialYear={fyShort} />
-            </button>
+            <FySelect />
             <Button size="sm" onClick={() => setAddOpen(true)}>
               <Plus className="size-4" />
               Destination

@@ -6,6 +6,7 @@ import { listEvidenceRecords } from '@/features/evidence/services/evidence-vault
 import { generateAccountantExport } from '@/features/export/services/generate-accountant-package'
 import { buildAccountantPackageData } from '@/features/export/utils/build-package-data'
 import {
+  deleteExportJob,
   getSummary,
   listExportJobs,
   loadPlanner,
@@ -77,6 +78,11 @@ export function useAccountantExport() {
     }
   }, [fyEndYear, label, refresh, user])
 
+  const removeJob = useCallback((id: string) => {
+    deleteExportJob(id)
+    setJobs(listExportJobs())
+  }, [])
+
   return {
     fyEndYear,
     label,
@@ -89,6 +95,7 @@ export function useAccountantExport() {
     jobs,
     canExport: Boolean(summary),
     generate,
+    removeJob,
     refresh,
   }
 }

@@ -140,3 +140,8 @@ export function saveExportJob(job: ExportJobRecord): void {
   else jobs.unshift(job)
   writeJson(EXPORT_KEY, jobs)
 }
+
+export function deleteExportJob(id: string): void {
+  const jobs = readJson<ExportJobRecord[]>(EXPORT_KEY, []).filter((j) => j.id !== id)
+  writeJson(EXPORT_KEY, jobs)
+}

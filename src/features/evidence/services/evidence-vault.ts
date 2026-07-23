@@ -10,6 +10,7 @@ import { isEvidenceCategory } from '@/features/evidence/types/evidence'
 import {
   monthKeyFromDate,
   normalizeEvidenceRecord,
+  localDateYmd,
 } from '@/features/evidence/utils/normalize-evidence'
 
 const LOCAL_KEY = 'ajx.evidence.vault.v2'
@@ -84,7 +85,9 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
   const title = input.title?.trim() || baseTitle(input.file.name)
   const mimeType = input.file.type || 'application/octet-stream'
   const tags = input.tags ?? []
-  const monthKey = resolveMonthKey(input.documentDate, now, input.monthKey)
+  /** Default document date to the upload day; callers / users may override. */
+  const documentDate = input.documentDate?.trim() || localDateYmd()
+  const monthKey = resolveMonthKey(documentDate, now, input.monthKey)
   const destinationId = input.destinationId ?? null
   const destinationName = input.destinationName ?? null
 
@@ -124,7 +127,7 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
         category: input.category,
         file_name: input.file.name,
         description: input.description,
-        document_date: input.documentDate,
+        document_date: documentDate,
         linked_claim_id: input.linkedClaimId,
         linked_claim_label: input.linkedClaimLabel,
         processing_status: ingest.status === 'failed' ? 'failed' : 'ready',
@@ -156,7 +159,7 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
     category: input.category,
     fyEndYear: input.fyEndYear,
     monthKey,
-    documentDate: input.documentDate,
+    documentDate,
     description: input.description,
     tags,
     linkedClaimId: input.linkedClaimId,

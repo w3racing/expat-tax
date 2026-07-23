@@ -8,7 +8,7 @@ import {
   type EvidenceUploadInput,
 } from '@/features/evidence/types/evidence'
 import { parseTagsInput } from '@/features/evidence/utils/normalize-evidence'
-import { monthKeyFromDate } from '@/features/evidence/utils/normalize-evidence'
+import { localDateYmd, monthKeyFromDate } from '@/features/evidence/utils/normalize-evidence'
 import { monthShortLabel } from '@/features/overnight-planner/utils/fy-months'
 import { fyMonthKeys } from '@/features/overnight-planner/utils/fy-months'
 import {
@@ -40,6 +40,8 @@ type EvidenceUploadDialogProps = {
   destinationOptions: EvidenceDestinationOption[]
   /** Prefill destination when opened from Destination Workspace */
   defaultDestinationId?: string | null
+  /** Prefill linked claim when opened from claims-without-evidence */
+  defaultLinkedClaimId?: string | null
   onOpenChange: (open: boolean) => void
   onUpload: (input: EvidenceUploadInput) => Promise<unknown>
 }
@@ -50,13 +52,14 @@ export function EvidenceUploadDialog({
   claimOptions,
   destinationOptions,
   defaultDestinationId = null,
+  defaultLinkedClaimId = null,
   onOpenChange,
   onUpload,
 }: EvidenceUploadDialogProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [category, setCategory] = useState<EvidenceCategory>('receipt')
-  const [documentDate, setDocumentDate] = useState('')
+  const [documentDate, setDocumentDate] = useState(() => localDateYmd())
   const [monthKey, setMonthKey] = useState<string>('auto')
   const [description, setDescription] = useState('')
   const [tagsText, setTagsText] = useState('')
@@ -72,14 +75,21 @@ export function EvidenceUploadDialog({
     }
   }, [open, defaultDestinationId])
 
+  useEffect(() => {
+    if (open) {
+      setDocumentDate(localDateYmd())
+      setLinkedClaimId(defaultLinkedClaimId ?? 'none')
+    }
+  }, [open, defaultLinkedClaimId])
+
   const reset = () => {
     setFile(null)
     setCategory('receipt')
-    setDocumentDate('')
+    setDocumentDate(localDateYmd())
     setMonthKey('auto')
     setDescription('')
     setTagsText('')
-    setLinkedClaimId('none')
+    setLinkedClaimId(defaultLinkedClaimId ?? 'none')
     setDestinationId(defaultDestinationId ?? 'none')
     setPhase('idle')
     setError(false)

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
-import { FyChip } from '@/shared/components/ajx/fy-chip'
+import { FySelect } from '@/shared/components/ajx/fy-select'
 import { Button } from '@/shared/components/ui/button'
 import { DraftStatus } from '@/shared/components/ui/draft-status'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs'
@@ -21,7 +21,6 @@ export function TaxPositionPage() {
   const {
     fyEndYear,
     label,
-    cycleFy,
     year,
     planner,
     persisted,
@@ -34,7 +33,6 @@ export function TaxPositionPage() {
     tabParam === 'expenses' || tabParam === 'fx' || tabParam === 'settings'
       ? tabParam
       : 'income'
-  const fyShort = `${fyEndYear - 1}–${String(fyEndYear).slice(2)}`
   const estimate = persisted?.summary.estimatedTaxAud
 
   const overnightProvenance = useMemo(() => {
@@ -51,14 +49,7 @@ export function TaxPositionPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <DraftStatus state={draftState} />
-            <button
-              aria-label={`Financial year ${label}. Activate to cycle years.`}
-              className="touch-target"
-              type="button"
-              onClick={cycleFy}
-            >
-              <FyChip financialYear={fyShort} />
-            </button>
+            <FySelect />
             <Button asChild variant="soft">
               <Link to="/position/summary">Tax summary</Link>
             </Button>

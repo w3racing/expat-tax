@@ -94,12 +94,12 @@ export function buildDashboardSnapshot(input: DashboardInputs): DashboardSnapsho
       href: '/evidence',
     })
   }
-  if (input.unlinkedClaimCount > 0 && evidence.length > 0) {
+  if (input.unlinkedClaimCount > 0) {
     missing.push({
       id: 'unlinked',
       title: 'Claims without evidence',
       description: 'Link receipts or documents to strengthen your working papers.',
-      href: '/evidence',
+      href: '/evidence/claims-without-evidence',
       count: input.unlinkedClaimCount,
     })
   }

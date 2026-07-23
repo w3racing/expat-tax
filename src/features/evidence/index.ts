@@ -1,4 +1,5 @@
 export { EvidencePage } from '@/features/evidence/pages/evidence-page'
+export { ClaimsWithoutEvidencePage } from '@/features/evidence/pages/claims-without-evidence-page'
 export { useEvidenceVault } from '@/features/evidence/hooks/use-evidence-vault'
 export {
   EVIDENCE_CATEGORIES,

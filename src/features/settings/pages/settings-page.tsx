@@ -133,7 +133,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Financial year, ATO FX, backup, account, and appearance. Advanced automation is deferred until MVP is complete."
+        description="Financial year, ATO FX, accountant export, backup, account, and appearance."
         title="Settings"
       />
 
@@ -200,10 +200,20 @@ export function SettingsPage() {
       </AppCard>
 
       <AppCard className="space-y-3">
+        <p className="text-sm font-semibold">Accountant export</p>
+        <p className="text-sm text-muted-foreground">
+          Once a year — generate a PDF summary and supporting ZIP for your registered tax agent.
+        </p>
+        <Button asChild variant="soft">
+          <Link to="/export">Open accountant export</Link>
+        </Button>
+      </AppCard>
+
+      <AppCard className="space-y-3">
         <p className="text-sm font-semibold">Backup & restore</p>
         <p className="text-sm text-muted-foreground">
-          Full MVP backup includes Tax Position, overnight counts, sample days with receipts, and
-          evidence metadata (plus local files when present).
+          Occasional use — full backup of Tax Position, overnight counts, sample days, and evidence.
+          Import a Calculator backup when migrating.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="soft" onClick={onBackup}>
@@ -221,9 +231,6 @@ export function SettingsPage() {
           />
         </div>
         {backupMessage ? <p className="text-sm text-muted-foreground">{backupMessage}</p> : null}
-        <Button asChild variant="ghost">
-          <Link to="/export">Accountant export</Link>
-        </Button>
         <Button asChild variant="ghost">
           <Link to="/migration">Import Calculator backup</Link>
         </Button>

@@ -47,6 +47,9 @@ const ClaimFormPage = lazy(() =>
 const EvidencePage = lazy(() =>
   import('@/features/evidence').then((m) => ({ default: m.EvidencePage })),
 )
+const ClaimsWithoutEvidencePage = lazy(() =>
+  import('@/features/evidence').then((m) => ({ default: m.ClaimsWithoutEvidencePage })),
+)
 const ExportPage = lazy(() =>
   import('@/features/export').then((m) => ({ default: m.ExportPage })),
 )
@@ -102,6 +105,10 @@ export function App() {
                 <Route element={<ClaimFormPage formKey="laundry" />} path="claim/laundry" />
                 <Route element={<ClaimFormPage />} path="claim/:category/:type" />
                 <Route element={<EvidencePage />} path="evidence" />
+                <Route
+                  element={<ClaimsWithoutEvidencePage />}
+                  path="evidence/claims-without-evidence"
+                />
                 <Route element={<ExportPage />} path="export" />
                 <Route element={<SettingsPage />} path="settings" />
                 <Route element={<MigrationWizardPage />} path="migration" />

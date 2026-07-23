@@ -23,7 +23,10 @@ import {
   sampleDayTotalAud,
   type SampleDay,
 } from '@/features/destination-workspace/types/sample-day'
-import { listEvidenceRecords } from '@/features/evidence/services/evidence-vault'
+import {
+  listEvidenceRecords,
+  uploadEvidence,
+} from '@/features/evidence/services/evidence-vault'
 import { PageHeader } from '@/shared/components/ajx/page-header'
 import { EmptyState } from '@/shared/components/ajx/empty-state'
 import { AppCard } from '@/shared/components/ajx/app-card'
@@ -186,7 +189,7 @@ export function SampleDayDetailPage() {
         />
       </div>
 
-      <div className="space-y-4 pb-28 md:pb-8">
+      <div className="space-y-4 pb-8">
         <div className="flex items-center justify-between gap-3">
           <SectionHeader
             description="Clean cards · tap amount · duplicate to go faster"
@@ -213,6 +216,11 @@ export function SampleDayDetailPage() {
               <li key={receipt.id}>
                 <SampleDayReceiptCard
                   autoFocusAmount={focusReceiptId === receipt.id}
+                  evidenceOptions={evidenceOptions.map((ev) => ({
+                    id: ev.id,
+                    title: ev.title,
+                    fileName: ev.fileName,
+                  }))}
                   readOnly={readOnly}
                   receipt={receipt}
                   onChange={(patch) => {
@@ -231,6 +239,36 @@ export function SampleDayDetailPage() {
                   onRemove={() => {
                     const next = removeReceipt(day.id, receipt.id)
                     if (next) setDay(next)
+                  }}
+                  onUploadEvidence={async (file) => {
+                    if (!workspace.fyEndYear || !workspace.destination) {
+                      throw new Error('Destination is not ready')
+                    }
+                    const record = await uploadEvidence({
+                      file,
+                      category: 'receipt',
+                      fyEndYear: workspace.fyEndYear,
+                      documentDate: null,
+                      description: receipt.description.trim(),
+                      linkedClaimId: null,
+                      linkedClaimLabel: null,
+                      destinationId,
+                      destinationName: workspace.destination.name,
+                      title: receipt.description.trim() || undefined,
+                    })
+                    const current = getSampleDay(day.id)
+                    if (current && !current.linkedEvidenceIds.includes(record.id)) {
+                      const next = setLinkedEvidenceIds(day.id, [
+                        ...current.linkedEvidenceIds,
+                        record.id,
+                      ])
+                      if (next) setDay(next)
+                    }
+                    return {
+                      id: record.id,
+                      title: record.title,
+                      fileName: record.fileName,
+                    }
                   }}
                 />
               </li>
@@ -283,20 +321,24 @@ export function SampleDayDetailPage() {
         />
       </div>
 
-      <AppCard className="space-y-3">
-        <SectionHeader
-          description="Optional — attach documents from Evidence Vault"
-          title="Linked evidence"
-        />
+      <AppCard className="scroll-mt-24 space-y-3" id="linked-evidence">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <SectionHeader
+            description="Files uploaded on receipts are saved here automatically. You can also upload extra supporting docs for this day."
+            title="Linked evidence"
+          />
+          {!readOnly ? (
+            <Button asChild size="sm" variant="outline">
+              <Link to={`/evidence?destination=${encodeURIComponent(destinationId)}`}>
+                Upload more
+              </Link>
+            </Button>
+          ) : null}
+        </div>
         {evidenceOptions.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No evidence uploaded yet.{' '}
-            <Link
-              className="font-medium text-primary underline-offset-2 hover:underline"
-              to={`/evidence?destination=${encodeURIComponent(destinationId)}`}
-            >
-              Upload evidence
-            </Link>
+            No evidence yet. Upload a screenshot, photo, or PDF on a receipt — it is saved to Evidence
+            Vault for this destination and linked here.
           </p>
         ) : (
           <ul className="space-y-2">

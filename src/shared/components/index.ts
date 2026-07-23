@@ -76,6 +76,7 @@ export { FloatingActionButton } from '@/shared/components/ajx/floating-action-bu
 export { QuickActionBar } from '@/shared/components/ajx/quick-action-bar'
 export type { QuickAction } from '@/shared/components/ajx/quick-action-bar'
 export { FyChip } from '@/shared/components/ajx/fy-chip'
+export { FySelect } from '@/shared/components/ajx/fy-select'
 export { SearchField } from '@/shared/components/ajx/search-field'
 export { FilterChip } from '@/shared/components/ajx/filter-chip'
 export { TimelineRail } from '@/shared/components/ajx/timeline-rail'

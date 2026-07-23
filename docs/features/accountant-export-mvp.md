@@ -2,7 +2,7 @@
 
 **Status:** Implemented  
 **Route:** `/export`  
-**Export version:** `mvp-1.0.0`
+**Export version:** `mvp-1.2.0`
 
 ## Deliverable
 
@@ -14,10 +14,11 @@ A professional **A4 PDF** suitable to send to a registered tax agent, plus a ZIP
 2. Financial year  
 3. Income summary  
 4. Expense summary  
-5. Claims (with evidence linked / missing)  
-6. Tax calculation summary (incl. brackets)  
-7. Evidence completeness  
-8. Notes  
+5. Overseas overnight claim (provenance)  
+6. Other claims  
+7. Tax calculation summary (incl. brackets)  
+8. Supporting documents  
+9. Notes  
 
 Clear disclaimer: indicative working papers — **not for lodgement**.
 

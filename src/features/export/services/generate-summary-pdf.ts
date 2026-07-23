@@ -262,7 +262,6 @@ export async function generateAccountantSummaryPdf(
     doc.text('Date', MARGIN.left, ctx.y)
     doc.text('Category', MARGIN.left + 22, ctx.y)
     doc.text('Description', MARGIN.left + 48, ctx.y)
-    doc.text('Evidence', MARGIN.left + 118, ctx.y)
     doc.text('AUD', PAGE.w - MARGIN.right, ctx.y, { align: 'right' })
     ctx.y += 2
     doc.setDrawColor(RULE.r, RULE.g, RULE.b)
@@ -280,12 +279,9 @@ export async function generateAccountantSummaryPdf(
         : '—'
       doc.text(dateBit, MARGIN.left, ctx.y)
       doc.text(claim.category, MARGIN.left + 22, ctx.y)
-      const desc = doc.splitTextToSize(claim.description, 66) as string[]
+      const desc = doc.splitTextToSize(claim.description, 110) as string[]
       doc.text(desc[0] ?? '', MARGIN.left + 48, ctx.y)
-      doc.setTextColor(MUTED.r, MUTED.g, MUTED.b)
-      doc.text(claim.linkedEvidence ? 'Linked' : 'Missing', MARGIN.left + 118, ctx.y)
       doc.setFont('courier', 'normal')
-      doc.setTextColor(INK.r, INK.g, INK.b)
       doc.text(money(claim.amountAud), PAGE.w - MARGIN.right, ctx.y, { align: 'right' })
       ctx.y += 5
       if (claim.currencyNote) {
@@ -350,10 +346,20 @@ export async function generateAccountantSummaryPdf(
   }
 
   // —— Evidence completeness ——
-  sectionTitle(ctx, '8. Evidence completeness')
+  sectionTitle(ctx, '8. Supporting documents')
   kvRow(ctx, 'Documents in vault', String(data.evidence.documentCount))
-  kvRow(ctx, 'Claims with linked evidence', `${data.evidence.linkedCount} / ${data.evidence.claimCount}`)
-  kvRow(ctx, 'Completeness score', `${data.evidence.completenessPercent}%`, { bold: true })
+  kvRow(
+    ctx,
+    'Claims with receipt attached',
+    `${data.evidence.linkedCount} / ${data.evidence.claimCount}`,
+  )
+  kvRow(ctx, 'Package readiness', `${data.evidence.completenessPercent}%`, { bold: true })
+  ctx.y += 1
+  paragraph(
+    ctx,
+    'Not every claim needs a receipt on file. Small or frequent expenses are often substantiated from bank or credit card statements if the ATO asks.',
+    7,
+  )
 
   if (data.evidence.byCategory.length > 0) {
     ctx.y += 2
@@ -369,7 +375,7 @@ export async function generateAccountantSummaryPdf(
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
     docSetInk(doc)
-    doc.text('Gaps for agent review', MARGIN.left, ctx.y)
+    doc.text('Notes for agent review', MARGIN.left, ctx.y)
     ctx.y += 5
     for (const gap of data.evidence.gaps) {
       ensureSpace(ctx, 6)
@@ -377,7 +383,7 @@ export async function generateAccountantSummaryPdf(
     }
   } else {
     ctx.y += 2
-    paragraph(ctx, 'No obvious evidence gaps flagged for this year.', 9)
+    paragraph(ctx, 'No additional notes flagged for this year.', 9)
   }
 
   // —— Notes ——

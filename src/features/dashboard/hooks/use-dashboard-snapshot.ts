@@ -6,6 +6,10 @@ import {
 } from '@/features/dashboard/utils/build-snapshot'
 import { listSampleDaysForFy } from '@/features/destination-workspace/services/sample-day-store'
 import { listEvidenceRecords } from '@/features/evidence/services/evidence-vault'
+import {
+  countActiveUnlinkedClaims,
+  listClaimsWithEvidenceStatus,
+} from '@/features/evidence/utils/claim-evidence-status'
 import { getSummary, loadPlanner } from '@/shared/lib/local-data-store'
 
 export function useDashboardSnapshot() {
@@ -35,16 +39,8 @@ export function useDashboardSnapshot() {
     const planner = loadPlanner(fyEndYear)
     const year = planner.years.find((y) => y.fyEndYear === fyEndYear)
     const qualifyingOvernights = (year?.monthAway ?? []).reduce((sum, m) => sum + m.nights, 0)
-    const claimCount =
-      (year?.otherClaims.length ?? 0) +
-      (year?.flights.length ?? 0) +
-      (year?.transport.length ?? 0) +
-      (year?.carKm.length ?? 0) +
-      (year?.laundry.length ?? 0) +
-      (year?.apartmentCosts.length ?? 0) +
-      (year?.monthAway.length ?? 0)
-    const linkedIds = new Set(evidence.map((e) => e.linkedClaimId).filter(Boolean))
-    const unlinkedClaimCount = Math.max(0, claimCount - linkedIds.size)
+    const claimCount = listClaimsWithEvidenceStatus(fyEndYear).length
+    const unlinkedClaimCount = countActiveUnlinkedClaims(fyEndYear)
     const hasIncome = (summary?.totalIncomeAud ?? 0) > 0
     const hasExpenses = (summary?.totalClaimsAud ?? 0) > 0
 

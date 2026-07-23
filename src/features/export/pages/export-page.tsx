@@ -1,4 +1,5 @@
-import { FileText, Package } from 'lucide-react'
+import { useState } from 'react'
+import { FileText, Package, Trash2 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAccountantExport } from '@/features/export/hooks/use-accountant-export'
 import { PageHeader } from '@/shared/components/ajx/page-header'
@@ -6,6 +7,7 @@ import { SoftBanner } from '@/shared/components/ajx/soft-banner'
 import { AppCard } from '@/shared/components/ajx/app-card'
 import { EmptyState } from '@/shared/components/ajx/empty-state'
 import { Button } from '@/shared/components/ui/button'
+import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { ErrorBanner } from '@/shared/components/ui/error-banner'
 import { JobProgress } from '@/shared/components/ui/job-progress'
 import { formatAud } from '@/shared/lib/format'
@@ -13,6 +15,7 @@ import { formatAud } from '@/shared/lib/format'
 export function ExportPage() {
   const exp = useAccountantExport()
   const navigate = useNavigate()
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   if (!exp.canExport) {
     return (
@@ -37,6 +40,9 @@ export function ExportPage() {
   }
 
   const preview = exp.preview!
+  const pendingJob = pendingDeleteId
+    ? exp.jobs.find((job) => job.id === pendingDeleteId)
+    : undefined
 
   return (
     <div className="space-y-6">
@@ -117,7 +123,7 @@ export function ExportPage() {
       </AppCard>
 
       {preview.evidence.gaps.length > 0 ? (
-        <AppCard header={<h2 className="text-sm font-semibold">Evidence gaps (included in PDF)</h2>}>
+        <AppCard header={<h2 className="text-sm font-semibold">Notes for agent review (included in PDF)</h2>}>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             {preview.evidence.gaps.map((gap) => (
               <li key={gap}>{gap}</li>
@@ -136,21 +142,52 @@ export function ExportPage() {
             {exp.jobs.slice(0, 5).map((job) => (
               <li key={job.id}>
                 <AppCard className="flex items-center justify-between gap-3 text-sm">
-                  <span>
+                  <span className="min-w-0">
                     FY {job.fyEndYear} · {job.status}
                     {job.fileName ? (
-                      <span className="mt-0.5 block text-xs text-muted-foreground">{job.fileName}</span>
+                      <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                        {job.fileName}
+                      </span>
                     ) : null}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(job.createdAt).toLocaleString()}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(job.createdAt).toLocaleString()}
+                    </span>
+                    <Button
+                      aria-label={`Remove export from ${new Date(job.createdAt).toLocaleString()}`}
+                      className="text-muted-foreground hover:text-destructive"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPendingDeleteId(job.id)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </AppCard>
               </li>
             ))}
           </ul>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        confirmLabel="Remove"
+        description={
+          pendingJob?.fileName
+            ? `This removes “${pendingJob.fileName}” from recent exports on this device. Files already downloaded to your computer are not deleted.`
+            : 'This removes the export from recent history on this device. Files already downloaded to your computer are not deleted.'
+        }
+        destructive
+        open={pendingDeleteId != null}
+        title="Remove from recent exports?"
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => {
+          if (!pendingDeleteId) return
+          exp.removeJob(pendingDeleteId)
+          setPendingDeleteId(null)
+        }}
+      />
     </div>
   )
 }

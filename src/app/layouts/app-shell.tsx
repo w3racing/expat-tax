@@ -11,10 +11,9 @@ import {
   Wallet,
 } from 'lucide-react'
 import { useAuth } from '@/app/providers/auth-provider'
-import { useFy } from '@/app/providers/fy-provider'
 import { useTheme } from '@/app/providers/theme-provider'
 import { Button } from '@/shared/components/ui/button'
-import { FyChip } from '@/shared/components/ajx/fy-chip'
+import { FySelect } from '@/shared/components/ajx/fy-select'
 import { IconButton } from '@/shared/components/ui/icon-button'
 import { BottomNav, SideNav, type NavItemConfig } from '@/shared/components/ajx/navigation'
 
@@ -24,34 +23,18 @@ const nav: NavItemConfig[] = [
   { to: '/claim', label: 'Claim', icon: Receipt },
   { to: '/position', label: 'Position', icon: Wallet },
   { to: '/evidence', label: 'Evidence', icon: FileStack },
-  { to: '/export', label: 'Export', icon: Upload },
   { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
-/** Phone bottom bar — five primary destinations; Export & Settings via side/header. */
-const mobileNav: NavItemConfig[] = nav.filter(
-  (item) => item.to !== '/settings' && item.to !== '/export',
-)
+/** Phone bottom bar — primary workflow tabs; Settings via header gear. */
+const mobileNav: NavItemConfig[] = nav.filter((item) => item.to !== '/settings')
 
 export function AppShell() {
-  const { label, fyEndYear, cycleFy } = useFy()
   const { theme, toggleTheme } = useTheme()
   const { user } = useAuth()
-  const fyShort = `${fyEndYear - 1}–${String(fyEndYear).slice(2)}`
-
-  const fyControl = (
-    <button
-      aria-label={`Financial year ${label}. Activate to cycle years.`}
-      className="touch-target text-left"
-      type="button"
-      onClick={cycleFy}
-    >
-      <FyChip financialYear={fyShort} />
-    </button>
-  )
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[100rem] flex-col md:flex-row">
+    <div className="mx-auto flex h-dvh w-full min-w-0 max-w-[100rem] flex-col md:flex-row">
       <SideNav
         brand={
           <div>
@@ -63,7 +46,7 @@ export function AppShell() {
         }
         footer={
           <>
-            {fyControl}
+            <FySelect />
             <IconButton label="Toggle theme" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </IconButton>
@@ -72,20 +55,26 @@ export function AppShell() {
         items={nav}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-background/80 px-4 py-3 backdrop-blur md:px-6">
-          <div className="md:hidden">
-            <p className="font-display text-base font-semibold">AJX Tax</p>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex min-w-0 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/80 px-4 py-3 backdrop-blur md:gap-3 md:px-6">
+          <div className="min-w-0 shrink md:hidden">
+            <p className="truncate font-display text-base font-semibold">AJX Tax</p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <div className="md:hidden">{fyControl}</div>
-            <Button asChild className="md:hidden" size="sm" variant="ghost">
-              <NavLink to="/settings">
+          <div className="ml-auto flex min-w-0 shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+            <div className="md:hidden">
+              <FySelect />
+            </div>
+            <Button asChild className="md:hidden" size="icon" variant="ghost">
+              <NavLink aria-label="Settings" title="Settings" to="/settings">
                 <Settings className="size-4" />
-                Settings
               </NavLink>
             </Button>
-            <Button asChild size="sm" variant="soft">
+            <Button asChild className="sm:hidden" size="icon" variant="soft">
+              <NavLink aria-label="Import" title="Import" to="/migration">
+                <Upload className="size-4" />
+              </NavLink>
+            </Button>
+            <Button asChild className="hidden sm:inline-flex" size="sm" variant="soft">
               <NavLink to="/migration">Import</NavLink>
             </Button>
             <IconButton className="md:hidden" label="Toggle theme" onClick={toggleTheme}>
@@ -94,12 +83,12 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 pb-28 md:px-6 md:pb-8">
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-clip px-4 py-6 md:px-6 md:pb-8">
           <Outlet />
         </main>
-      </div>
 
-      <BottomNav aria-label="Mobile" items={mobileNav} />
+        <BottomNav aria-label="Mobile" className="shrink-0" items={mobileNav} />
+      </div>
     </div>
   )
 }

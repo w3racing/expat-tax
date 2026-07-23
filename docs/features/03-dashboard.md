@@ -19,7 +19,7 @@ Answers at a glance:
 
 | Module | Presentation |
 |--------|----------------|
-| Current financial year | Label + FY chip (cycle years) |
+| Current financial year | Label + FY dropdown (select any available year) |
 | Estimated tax position | Hero amount card (refund / payable) · indicative |
 | Total overseas claim | Large AUD · nights × daily amount (Calculator parity) |
 | Income | Employment + investments |
@@ -52,5 +52,6 @@ Answers at a glance:
 
 - All listed modules render without spreadsheet styling
 - Tap any insight → correct deep link
+- **Claims without evidence** → `/evidence/claims-without-evidence` table (add evidence · dismiss · come back later)
 - Completing sample days / uploading evidence refreshes on focus
 - Loads from local planner + evidence + sample-day stores (no N+1)

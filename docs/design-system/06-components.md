@@ -57,7 +57,8 @@ Every interactive primitive meets **44px** min height on touch (`h-11` / `size-1
 | `CardSkeleton` / `PageSkeleton` / `ListSkeleton` / `TableSkeleton` | Layout-matched loading |
 | `QuickActionBar` | Horizontal quick actions |
 | `FloatingActionButton` | Phone capture FAB |
-| `FyChip` | Financial year pill |
+| `FyChip` | Financial year pill (display) |
+| `FySelect` | Financial year dropdown picker |
 | `SearchField` | Large touch search |
 | `FilterChip` | Toggleable filter |
 | `TimelineRail` | Vertical timeline spine |

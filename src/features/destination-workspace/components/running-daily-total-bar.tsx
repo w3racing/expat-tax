@@ -11,7 +11,7 @@ type RunningDailyTotalBarProps = {
   className?: string
 }
 
-/** Sticky bar for fast mobile receipt entry — always shows live day total. */
+/** In-flow summary for receipt entry — shows live day total without covering content. */
 export function RunningDailyTotalBar({
   totalAud,
   receiptCount,
@@ -22,7 +22,7 @@ export function RunningDailyTotalBar({
   return (
     <div
       className={cn(
-        'sticky bottom-20 z-30 -mx-4 border-t border-border bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgba(12,21,36,0.08)] backdrop-blur md:bottom-4 md:mx-0 md:rounded-2xl md:border',
+        'rounded-2xl border border-border bg-card px-4 py-4 shadow-sm',
         className,
       )}
     >

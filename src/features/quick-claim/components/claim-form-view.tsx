@@ -205,7 +205,7 @@ export function ClaimFormView({ config }: ClaimFormViewProps) {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 pb-24 md:pb-0">
+    <div className="mx-auto max-w-lg space-y-5 pb-4 md:pb-0">
       <div className="space-y-2">
         <Button asChild className="-ml-2" size="sm" variant="ghost">
           <Link to={config.backTo}>
@@ -370,8 +370,8 @@ export function ClaimFormView({ config }: ClaimFormViewProps) {
         {formError ? <ErrorBanner description={formError} title="Check this claim" /> : null}
       </AppCard>
 
-      <div className="fixed inset-x-0 bottom-[calc(3.75rem+env(safe-area-inset-bottom))] z-20 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:static md:inset-auto md:z-auto md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-        <div className="mx-auto flex max-w-lg gap-2">
+      <div className="sticky bottom-0 z-20 border-t border-border bg-background/95 px-1 py-3 backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+        <div className="mx-auto flex max-w-lg gap-2 px-3 md:px-0">
           <Button
             className="flex-1 md:flex-none"
             disabled={config.mode === 'car-km' ? !canSubmitCar : !canSubmitAmount}

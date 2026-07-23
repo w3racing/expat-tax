@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera, Copy, ImagePlus, Trash2, X } from 'lucide-react'
+import { Copy, FileUp, Trash2, Unlink } from 'lucide-react'
 import {
   RECEIPT_CATEGORIES,
   RECEIPT_CATEGORY_LABELS,
@@ -7,7 +7,6 @@ import {
   type ReceiptCategory,
   type SampleDayReceipt,
 } from '@/features/destination-workspace/types/sample-day'
-import { readReceiptImageAsDataUrl } from '@/features/destination-workspace/services/sample-day-store'
 import { formatAud } from '@/shared/lib/format'
 import { Button } from '@/shared/components/ui/button'
 import { Input } from '@/shared/components/ui/input'
@@ -20,29 +19,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select'
+import { UploadStatus, type UploadPhase } from '@/shared/components/ui/upload-status'
+import { ErrorBanner } from '@/shared/components/ui/error-banner'
 import { cn } from '@/shared/lib/cn'
+
+export type ReceiptEvidenceOption = {
+  id: string
+  title: string
+  fileName: string
+}
 
 type SampleDayReceiptCardProps = {
   receipt: SampleDayReceipt
   readOnly: boolean
+  evidenceOptions: ReceiptEvidenceOption[]
   /** Focus amount field when this card is newly added */
   autoFocusAmount?: boolean
+  /** Upload file into Evidence Vault for this destination and return the saved record */
+  onUploadEvidence: (file: File) => Promise<ReceiptEvidenceOption>
   onChange: (patch: Partial<Omit<SampleDayReceipt, 'id'>>) => void
   onDuplicate: () => void
   onRemove: () => void
 }
 
+const EVIDENCE_ACCEPT =
+  'image/*,application/pdf,.pdf,.png,.jpg,.jpeg,.webp,.heic,.gif,.doc,.docx,.csv,.txt'
+
+function numberToDraft(value: number): string {
+  return value === 0 ? '' : String(value)
+}
+
+/** Allow partial decimals like "12." while typing — Number("12.") would strip the point. */
+function isDecimalDraft(value: string, maxFractionDigits?: number): boolean {
+  if (value === '') return true
+  if (maxFractionDigits == null) return /^\d*\.?\d*$/.test(value)
+  return new RegExp(`^\\d*\\.?\\d{0,${maxFractionDigits}}$`).test(value)
+}
+
+function parseDecimalDraft(value: string): number {
+  if (value === '' || value === '.') return 0
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
 export function SampleDayReceiptCard({
   receipt,
   readOnly,
+  evidenceOptions,
   autoFocusAmount,
+  onUploadEvidence,
   onChange,
   onDuplicate,
   onRemove,
 }: SampleDayReceiptCardProps) {
   const amountRef = useRef<HTMLInputElement>(null)
-  const cameraRef = useRef<HTMLInputElement>(null)
-  const [imageError, setImageError] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [amountDraft, setAmountDraft] = useState(() => numberToDraft(receipt.localAmount))
+  const [rateDraft, setRateDraft] = useState(() => numberToDraft(receipt.exchangeRate))
+  const [uploadPhase, setUploadPhase] = useState<UploadPhase>('idle')
+  const [uploadFileName, setUploadFileName] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState(false)
+  const pendingFileRef = useRef<File | null>(null)
 
   useEffect(() => {
     if (autoFocusAmount && !readOnly) {
@@ -51,16 +88,30 @@ export function SampleDayReceiptCard({
     }
   }, [autoFocusAmount, readOnly])
 
-  const aud = formatAud(receipt.amountAud, 2)
+  useEffect(() => {
+    setAmountDraft(numberToDraft(receipt.localAmount))
+    setRateDraft(numberToDraft(receipt.exchangeRate))
+  }, [receipt.id])
 
-  const attachImage = async (file: File | undefined) => {
-    if (!file) return
-    setImageError(null)
+  const aud = formatAud(receipt.amountAud, 2)
+  const linkedEvidence =
+    receipt.evidenceId != null
+      ? evidenceOptions.find((e) => e.id === receipt.evidenceId) ?? null
+      : null
+
+  const runUpload = async (file: File) => {
+    pendingFileRef.current = file
+    setUploadFileName(file.name)
+    setUploadError(false)
+    setUploadPhase('uploading')
     try {
-      const { dataUrl, fileName } = await readReceiptImageAsDataUrl(file)
-      onChange({ imageDataUrl: dataUrl, imageFileName: fileName })
-    } catch (err) {
-      setImageError(err instanceof Error ? err.message : 'Could not attach photo')
+      const saved = await onUploadEvidence(file)
+      onChange({ evidenceId: saved.id })
+      setUploadPhase('ready')
+      pendingFileRef.current = null
+    } catch {
+      setUploadPhase('failed')
+      setUploadError(true)
     }
   }
 
@@ -104,10 +155,12 @@ export function SampleDayReceiptCard({
             id={`amt-${receipt.id}`}
             inputMode="decimal"
             placeholder="0.00"
-            value={receipt.localAmount === 0 ? '' : String(receipt.localAmount)}
+            value={amountDraft}
             onChange={(e) => {
-              const n = Number(e.target.value)
-              onChange({ localAmount: Number.isFinite(n) ? n : 0 })
+              const next = e.target.value
+              if (!isDecimalDraft(next, 2)) return
+              setAmountDraft(next)
+              onChange({ localAmount: parseDecimalDraft(next) })
             }}
           />
         </div>
@@ -152,10 +205,13 @@ export function SampleDayReceiptCard({
                 id={`rate-${receipt.id}`}
                 inputMode="decimal"
                 placeholder="Units per A$1"
-                value={receipt.exchangeRate === 0 ? '' : String(receipt.exchangeRate)}
+                value={rateDraft}
                 onChange={(e) => {
-                  const n = Number(e.target.value)
-                  onChange({ exchangeRate: Number.isFinite(n) && n > 0 ? n : 1 })
+                  const next = e.target.value
+                  if (!isDecimalDraft(next, 6)) return
+                  setRateDraft(next)
+                  const n = parseDecimalDraft(next)
+                  onChange({ exchangeRate: n > 0 ? n : 1 })
                 }}
               />
             )}
@@ -217,66 +273,88 @@ export function SampleDayReceiptCard({
         </div>
 
         <div className="space-y-2">
-          <Label>Photo</Label>
-          {receipt.imageDataUrl ? (
-            <div className="relative overflow-hidden rounded-xl border border-border">
-              <img
-                alt={receipt.imageFileName ?? 'Receipt photo'}
-                className="max-h-48 w-full object-cover"
-                src={receipt.imageDataUrl}
-              />
+          <Label>Evidence</Label>
+          <p className="text-xs text-muted-foreground">
+            Screenshot, photo, or PDF — saved to Evidence Vault for this destination and linked
+            here.
+          </p>
+
+          {linkedEvidence && uploadPhase !== 'uploading' ? (
+            <div className="flex items-start justify-between gap-3 rounded-xl border border-border bg-muted/30 px-3 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{linkedEvidence.title}</p>
+                <p className="truncate text-xs text-muted-foreground">{linkedEvidence.fileName}</p>
+              </div>
               {!readOnly ? (
                 <Button
-                  className="absolute top-2 right-2"
+                  aria-label="Unlink evidence"
                   size="sm"
-                  variant="secondary"
-                  onClick={() => onChange({ imageDataUrl: null, imageFileName: null })}
+                  variant="ghost"
+                  onClick={() => {
+                    onChange({ evidenceId: null })
+                    setUploadPhase('idle')
+                    setUploadFileName(null)
+                  }}
                 >
-                  <X className="size-4" />
-                  Remove
+                  <Unlink className="size-4" />
+                  Unlink
                 </Button>
               ) : null}
             </div>
-          ) : !readOnly ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                className="min-h-12 flex-1"
-                type="button"
-                variant="outline"
-                onClick={() => cameraRef.current?.click()}
-              >
-                <Camera className="size-4" />
-                Take photo
-              </Button>
-              <label className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold">
-                <ImagePlus className="size-4" />
-                Choose image
-                <input
-                  accept="image/*"
-                  className="sr-only"
-                  type="file"
-                  onChange={(e) => {
-                    void attachImage(e.target.files?.[0])
-                    e.target.value = ''
-                  }}
-                />
-              </label>
+          ) : null}
+
+          {uploadPhase === 'uploading' || uploadPhase === 'failed' ? (
+            <UploadStatus
+              fileName={uploadFileName ?? 'Evidence'}
+              phase={uploadPhase}
+              onRetry={
+                uploadPhase === 'failed' && pendingFileRef.current
+                  ? () => {
+                      const file = pendingFileRef.current
+                      if (file) void runUpload(file)
+                    }
+                  : undefined
+              }
+            />
+          ) : null}
+
+          {uploadError ? (
+            <ErrorBanner
+              code="UPLOAD_FAILED"
+              onAction={() => {
+                const file = pendingFileRef.current
+                if (file) void runUpload(file)
+              }}
+            />
+          ) : null}
+
+          {!readOnly ? (
+            <>
               <input
-                ref={cameraRef}
-                accept="image/*"
-                capture="environment"
+                ref={fileRef}
+                accept={EVIDENCE_ACCEPT}
                 className="sr-only"
                 type="file"
                 onChange={(e) => {
-                  void attachImage(e.target.files?.[0])
+                  const file = e.target.files?.[0]
                   e.target.value = ''
+                  if (file) void runUpload(file)
                 }}
               />
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No photo attached</p>
-          )}
-          {imageError ? <p className="text-sm text-destructive">{imageError}</p> : null}
+              <Button
+                className="min-h-12 w-full"
+                disabled={uploadPhase === 'uploading'}
+                type="button"
+                variant="outline"
+                onClick={() => fileRef.current?.click()}
+              >
+                <FileUp className="size-4" />
+                {linkedEvidence ? 'Replace evidence' : 'Upload evidence'}
+              </Button>
+            </>
+          ) : !linkedEvidence ? (
+            <p className="text-sm text-muted-foreground">No evidence linked</p>
+          ) : null}
         </div>
       </div>
     </article>

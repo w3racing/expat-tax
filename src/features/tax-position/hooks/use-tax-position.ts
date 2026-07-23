@@ -15,7 +15,7 @@ import {
 import type { DraftSaveState } from '@/shared/components/ui/draft-status'
 
 export function useTaxPosition() {
-  const { fyEndYear, label, setFyEndYear, cycleFy } = useFy()
+  const { fyEndYear, label, setFyEndYear } = useFy()
   const [planner, setPlanner] = useState<TaxPlannerState>(() => loadTaxPlanner(fyEndYear))
   const [year, setYear] = useState<TaxYearRecord>(() => {
     const p = loadTaxPlanner(fyEndYear)
@@ -76,7 +76,6 @@ export function useTaxPosition() {
     fyEndYear,
     label,
     setFyEndYear,
-    cycleFy,
     planner,
     year,
     persisted,
