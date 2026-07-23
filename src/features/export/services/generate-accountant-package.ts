@@ -2,8 +2,11 @@ import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import type { AuthUser } from '@/app/providers/auth-provider'
 import { collectAppBackup } from '@/features/backup/services/app-backup'
+import {
+  hydrateEvidenceBinaries,
+  listEvidenceRecords,
+} from '@/features/evidence/services/evidence-vault'
 import { listSampleDaysForFy } from '@/features/destination-workspace/services/sample-day-store'
-import { listEvidenceRecords } from '@/features/evidence/services/evidence-vault'
 import { buildAccountantPackageData } from '@/features/export/utils/build-package-data'
 import {
   accountantPdfFileName,
@@ -55,7 +58,7 @@ export async function generateAccountantExport(input: {
       }
 
       onPhase({ label: 'Reviewing evidence and sample days…', progress: 35 })
-      const evidence = listEvidenceRecords(fyEndYear)
+      const evidence = await hydrateEvidenceBinaries(listEvidenceRecords(fyEndYear))
       const sampleDays = listSampleDaysForFy(fyEndYear)
 
       const packageData = buildAccountantPackageData({
@@ -76,7 +79,7 @@ export async function generateAccountantExport(input: {
       const pdfBlob = await generateAccountantSummaryPdf(packageData)
 
       onPhase({ label: 'Packaging supporting files…', progress: 75 })
-      const fullBackup = collectAppBackup(fyEndYear)
+      const fullBackup = await collectAppBackup(fyEndYear)
       const zip = new JSZip()
       zip.file(pdfName, pdfBlob)
       zip.file(

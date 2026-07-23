@@ -7,6 +7,10 @@
 import type { SampleDay } from '@/features/destination-workspace/types/sample-day'
 import { normalizeSampleDay } from '@/features/destination-workspace/types/sample-day'
 import type { EvidenceRecord } from '@/features/evidence/types/evidence'
+import {
+  hydrateEvidenceBinaries,
+  persistEvidenceRecords,
+} from '@/features/evidence/services/evidence-vault'
 import type { TaxPlannerState } from '@/features/tax-position/engine/types'
 import { emptyPlanner } from '@/features/tax-position/engine'
 import { readRawPlanner, replacePlannerState } from '@/shared/lib/local-data-store'
@@ -49,10 +53,11 @@ function writeJson(key: string, value: unknown) {
   localStorage.setItem(key, JSON.stringify(value))
 }
 
-export function collectAppBackup(activeFyEndYear: number): AppBackupPayload {
+export async function collectAppBackup(activeFyEndYear: number): Promise<AppBackupPayload> {
   const planner = readRawPlanner() ?? emptyPlanner(activeFyEndYear)
   const sampleStore = readJson<{ days: SampleDay[] }>(SAMPLE_DAYS_KEY, { days: [] })
-  const evidence = readJson<EvidenceRecord[]>(EVIDENCE_KEY, []).filter((e) => !e.softDeletedAt)
+  const evidenceMeta = readJson<EvidenceRecord[]>(EVIDENCE_KEY, []).filter((e) => !e.softDeletedAt)
+  const evidence = await hydrateEvidenceBinaries(evidenceMeta)
 
   return {
     version: APP_BACKUP_VERSION,
@@ -110,16 +115,16 @@ function currentFallbackFy(planner: TaxPlannerState): number {
 }
 
 /** Replace local MVP stores with backup contents. Destructive — caller must confirm. */
-export function restoreAppBackup(backup: AppBackupPayload): AppBackupSummary {
+export async function restoreAppBackup(backup: AppBackupPayload): Promise<AppBackupSummary> {
   replacePlannerState(backup.planner)
   writeJson(SAMPLE_DAYS_KEY, { days: backup.sampleDays })
-  writeJson(EVIDENCE_KEY, backup.evidence)
+  await persistEvidenceRecords(backup.evidence)
   localStorage.setItem(ACTIVE_FY_KEY, String(backup.activeFyEndYear))
   return summarizeAppBackup(backup)
 }
 
-export function downloadAppBackup(activeFyEndYear: number): AppBackupSummary {
-  const backup = collectAppBackup(activeFyEndYear)
+export async function downloadAppBackup(activeFyEndYear: number): Promise<AppBackupSummary> {
+  const backup = await collectAppBackup(activeFyEndYear)
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

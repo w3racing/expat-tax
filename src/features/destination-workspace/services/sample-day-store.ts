@@ -9,16 +9,16 @@ import {
 import { upsertDestinationRate } from '@/features/overnight-planner/utils/overnight-matrix'
 import type { TaxPlannerState } from '@/features/tax-position/engine/types'
 import { saveTaxPlanner } from '@/features/tax-position/services/position-service'
+import {
+  MAX_LOCAL_IMAGE_BYTES,
+  MAX_LOCAL_IMAGE_SOURCE_BYTES,
+} from '@/shared/lib/compress-image'
 
 const STORE_KEY = 'ajx.sample-days.v1'
-/** Soft cap for compressed receipt photo data URLs in local storage */
-export const MAX_RECEIPT_IMAGE_BYTES = 400 * 1024
+/** Soft cap for compressed receipt photo binaries */
+export const MAX_RECEIPT_IMAGE_BYTES = MAX_LOCAL_IMAGE_BYTES
 /** Camera / library originals can be larger — we resize before storing */
-export const MAX_RECEIPT_SOURCE_BYTES = 12 * 1024 * 1024
-/** Longest edge after resize — readable on phone, small in storage */
-const RECEIPT_IMAGE_MAX_EDGE = 1280
-const RECEIPT_JPEG_QUALITY_START = 0.72
-const RECEIPT_JPEG_QUALITY_FLOOR = 0.4
+export const MAX_RECEIPT_SOURCE_BYTES = MAX_LOCAL_IMAGE_SOURCE_BYTES
 
 type SampleDayStore = {
   days: SampleDay[]
@@ -196,84 +196,6 @@ export function duplicateReceipt(sampleDayId: string, receiptId: string): Sample
   const receipts = [...day.receipts]
   receipts.splice(idx + 1, 0, copy)
   return updateSampleDay(sampleDayId, { receipts })
-}
-
-function dataUrlByteLength(dataUrl: string): number {
-  const base64 = dataUrl.split(',')[1] ?? ''
-  return Math.ceil((base64.length * 3) / 4)
-}
-
-function receiptJpegFileName(fileName: string): string {
-  const base = (fileName || 'receipt').replace(/\.[^.]+$/, '')
-  return `${base || 'receipt'}.jpg`
-}
-
-/** Resize + JPEG-compress for local storage — low-res is fine for sample-day evidence. */
-export async function readReceiptImageAsDataUrl(file: File): Promise<{
-  dataUrl: string
-  fileName: string
-}> {
-  if (!file.type.startsWith('image/')) {
-    return Promise.reject(
-      Object.assign(new Error('Please choose a photo or image'), { code: 'UPLOAD_FAILED' }),
-    )
-  }
-  if (file.size > MAX_RECEIPT_SOURCE_BYTES) {
-    return Promise.reject(
-      Object.assign(new Error('Photo is too large (max about 12 MB)'), {
-        code: 'UPLOAD_FAILED',
-      }),
-    )
-  }
-
-  let bitmap: ImageBitmap
-  try {
-    bitmap = await createImageBitmap(file)
-  } catch {
-    return Promise.reject(
-      Object.assign(new Error('Could not read that image. Try a JPG or PNG.'), {
-        code: 'UPLOAD_FAILED',
-      }),
-    )
-  }
-
-  try {
-    const scale = Math.min(1, RECEIPT_IMAGE_MAX_EDGE / Math.max(bitmap.width, bitmap.height))
-    const width = Math.max(1, Math.round(bitmap.width * scale))
-    const height = Math.max(1, Math.round(bitmap.height * scale))
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      return Promise.reject(
-        Object.assign(new Error('Could not process that photo'), { code: 'UPLOAD_FAILED' }),
-      )
-    }
-    ctx.drawImage(bitmap, 0, 0, width, height)
-
-    let quality = RECEIPT_JPEG_QUALITY_START
-    let dataUrl = canvas.toDataURL('image/jpeg', quality)
-    while (
-      dataUrlByteLength(dataUrl) > MAX_RECEIPT_IMAGE_BYTES &&
-      quality > RECEIPT_JPEG_QUALITY_FLOOR
-    ) {
-      quality = Math.max(RECEIPT_JPEG_QUALITY_FLOOR, quality - 0.1)
-      dataUrl = canvas.toDataURL('image/jpeg', quality)
-    }
-
-    if (dataUrlByteLength(dataUrl) > MAX_RECEIPT_IMAGE_BYTES) {
-      return Promise.reject(
-        Object.assign(new Error('Photo is still too large after compressing. Try another image.'), {
-          code: 'UPLOAD_FAILED',
-        }),
-      )
-    }
-
-    return { dataUrl, fileName: receiptJpegFileName(file.name) }
-  } finally {
-    bitmap.close()
-  }
 }
 
 export function completeSampleDay(id: string): SampleDay | null {

@@ -1,5 +1,12 @@
 import { getSupabase, isSupabaseConfigured } from '@/shared/lib/supabase'
 import { getIngestProvider } from '@/shared/integrations/ingest-provider'
+import { prepareLocalEvidenceFile } from '@/shared/lib/compress-image'
+import {
+  deleteLocalBlob,
+  getLocalBlob,
+  getLocalBlobs,
+  putLocalBlob,
+} from '@/shared/lib/local-blob-store'
 import type {
   EvidenceRecord,
   EvidenceUploadInput,
@@ -15,7 +22,12 @@ import {
 
 const LOCAL_KEY = 'ajx.evidence.vault.v2'
 const BUCKET = 'evidence'
-const MAX_LOCAL_BYTES = 4 * 1024 * 1024
+/** Local PDF / non-image cap — images are compressed first. Binaries live in IndexedDB. */
+const MAX_LOCAL_BYTES = 12 * 1024 * 1024
+
+function stripBinary(record: EvidenceRecord): EvidenceRecord {
+  return { ...record, dataUrl: null }
+}
 
 function readLocal(): EvidenceRecord[] {
   try {
@@ -29,15 +41,34 @@ function readLocal(): EvidenceRecord[] {
 }
 
 function writeLocal(items: EvidenceRecord[]) {
+  // Metadata only — never persist base64 binaries in localStorage (mobile quota ~5 MB).
+  const metadata = items.map(stripBinary)
   try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(items))
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(metadata))
   } catch (err) {
     const name = err instanceof DOMException ? err.name : ''
     if (name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-      throw Object.assign(new Error('Browser storage is full'), { code: 'UPLOAD_FAILED' })
+      throw Object.assign(
+        new Error('Browser storage is full. Delete unused evidence or export a backup, then retry.'),
+        { code: 'UPLOAD_FAILED' },
+      )
     }
     throw Object.assign(new Error('Could not save evidence'), { code: 'SAVE_FAILED' })
   }
+}
+
+/**
+ * Move legacy embedded dataUrls out of localStorage into IndexedDB.
+ * Frees quota so further uploads can succeed on mobile.
+ */
+async function migrateEmbeddedBinaries(): Promise<void> {
+  const items = readLocal()
+  const embedded = items.filter((i) => typeof i.dataUrl === 'string' && i.dataUrl.length > 0)
+  if (embedded.length === 0) return
+  for (const item of embedded) {
+    if (item.dataUrl) await putLocalBlob(item.id, item.dataUrl)
+  }
+  writeLocal(items)
 }
 
 function readAsDataUrl(file: File): Promise<string> {
@@ -45,7 +76,7 @@ function readAsDataUrl(file: File): Promise<string> {
     return Promise.reject(
       Object.assign(
         new Error(
-          'File is too large for local storage (max 4 MB). Configure Supabase for larger files.',
+          'File is too large for local storage (max about 12 MB). Try a smaller PDF or photo.',
         ),
         { code: 'UPLOAD_FAILED' },
       ),
@@ -57,6 +88,13 @@ function readAsDataUrl(file: File): Promise<string> {
     reader.onerror = () => reject(reader.error)
     reader.readAsDataURL(file)
   })
+}
+
+async function storeLocalBinary(id: string, file: File): Promise<{ dataUrl: string; file: File }> {
+  const prepared = await prepareLocalEvidenceFile(file)
+  const dataUrl = await readAsDataUrl(prepared)
+  await putLocalBlob(id, dataUrl)
+  return { dataUrl, file: prepared }
 }
 
 function baseTitle(fileName: string) {
@@ -80,16 +118,20 @@ export function getEvidenceRecord(id: string): EvidenceRecord | null {
 }
 
 export async function uploadEvidence(input: EvidenceUploadInput): Promise<EvidenceRecord> {
+  await migrateEmbeddedBinaries()
+
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
   const title = input.title?.trim() || baseTitle(input.file.name)
-  const mimeType = input.file.type || 'application/octet-stream'
+  let mimeType = input.file.type || 'application/octet-stream'
   const tags = input.tags ?? []
   /** Default document date to the upload day; callers / users may override. */
   const documentDate = input.documentDate?.trim() || localDateYmd()
   const monthKey = resolveMonthKey(documentDate, now, input.monthKey)
   const destinationId = input.destinationId ?? null
   const destinationName = input.destinationName ?? null
+  let fileName = input.file.name
+  let byteSize = input.file.size
 
   // Extension point only — NoopIngestProvider marks ready immediately (no OCR / analysis).
   const ingest = await getIngestProvider().processDocument({
@@ -107,7 +149,11 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) {
-      dataUrl = await readAsDataUrl(input.file)
+      const stored = await storeLocalBinary(id, input.file)
+      dataUrl = stored.dataUrl
+      fileName = stored.file.name
+      mimeType = stored.file.type || mimeType
+      byteSize = stored.file.size
     } else {
       storagePath = `${user.id}/${input.fyEndYear}/${id}/${input.file.name}`
       const { error } = await supabase.storage.from(BUCKET).upload(storagePath, input.file, {
@@ -150,12 +196,16 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
       })
     }
   } else {
-    dataUrl = await readAsDataUrl(input.file)
+    const stored = await storeLocalBinary(id, input.file)
+    dataUrl = stored.dataUrl
+    fileName = stored.file.name
+    mimeType = stored.file.type || mimeType
+    byteSize = stored.file.size
   }
 
   const record: EvidenceRecord = {
     id,
-    fileName: input.file.name,
+    fileName,
     category: input.category,
     fyEndYear: input.fyEndYear,
     monthKey,
@@ -168,9 +218,9 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
     destinationName,
     title,
     mimeType,
-    byteSize: input.file.size,
+    byteSize,
     processingStatus: ingest.status === 'failed' ? 'failed' : 'ready',
-    dataUrl,
+    dataUrl: null,
     storagePath,
     storageProvider,
     storageBucket: BUCKET,
@@ -185,7 +235,8 @@ export async function uploadEvidence(input: EvidenceUploadInput): Promise<Eviden
   const items = readLocal()
   items.unshift(record)
   writeLocal(items)
-  return record
+  // Return with dataUrl hydrated for immediate preview / linking callers.
+  return { ...record, dataUrl }
 }
 
 export function updateEvidenceRecord(
@@ -230,17 +281,21 @@ export async function replaceEvidenceFile(
   id: string,
   file: File,
 ): Promise<EvidenceRecord | null> {
+  await migrateEmbeddedBinaries()
+
   const items = readLocal()
   const idx = items.findIndex((i) => i.id === id)
   if (idx < 0) return null
   const current = items[idx]!
   const now = new Date().toISOString()
-  const mimeType = file.type || 'application/octet-stream'
+  let mimeType = file.type || 'application/octet-stream'
+  let fileName = file.name
+  let byteSize = file.size
 
   const supabase = getSupabase()
   let storagePath = current.storagePath
   let storageProvider = current.storageProvider
-  let dataUrl: string | null | undefined = current.dataUrl
+  let dataUrl: string | null = null
 
   if (supabase && isSupabaseConfigured && current.storageProvider === 'supabase') {
     const {
@@ -261,6 +316,7 @@ export async function replaceEvidenceFile(
       storagePath = nextPath
       storageProvider = 'supabase'
       dataUrl = null
+      await deleteLocalBlob(id).catch(() => undefined)
       await supabase
         .from('evidence_files')
         .update({
@@ -272,23 +328,31 @@ export async function replaceEvidenceFile(
         .eq('evidence_item_id', id)
         .eq('user_id', user.id)
     } else {
-      dataUrl = await readAsDataUrl(file)
+      const stored = await storeLocalBinary(id, file)
+      dataUrl = stored.dataUrl
+      fileName = stored.file.name
+      mimeType = stored.file.type || mimeType
+      byteSize = stored.file.size
       storageProvider = 'local_dev'
       storagePath = null
     }
   } else {
-    dataUrl = await readAsDataUrl(file)
+    const stored = await storeLocalBinary(id, file)
+    dataUrl = stored.dataUrl
+    fileName = stored.file.name
+    mimeType = stored.file.type || mimeType
+    byteSize = stored.file.size
     storageProvider = 'local_dev'
     storagePath = null
   }
 
   const next: EvidenceRecord = {
     ...current,
-    fileName: file.name,
-    title: current.title || baseTitle(file.name),
+    fileName,
+    title: current.title || baseTitle(fileName),
     mimeType,
-    byteSize: file.size,
-    dataUrl,
+    byteSize,
+    dataUrl: null,
     storagePath,
     storageProvider,
     processingStatus: 'ready',
@@ -297,7 +361,7 @@ export async function replaceEvidenceFile(
   items[idx] = next
   writeLocal(items)
   void syncMetadataToSupabase(next)
-  return next
+  return { ...next, dataUrl }
 }
 
 async function syncMetadataToSupabase(record: EvidenceRecord) {
@@ -349,6 +413,8 @@ export function restoreEvidenceRecord(id: string): void {
 
 export async function getEvidenceDownloadUrl(record: EvidenceRecord): Promise<string | null> {
   if (record.dataUrl) return record.dataUrl
+  const local = await getLocalBlob(record.id)
+  if (local) return local
   if (!record.storagePath) return null
   const supabase = getSupabase()
   if (!supabase) return null
@@ -357,6 +423,35 @@ export async function getEvidenceDownloadUrl(record: EvidenceRecord): Promise<st
     .createSignedUrl(record.storagePath, 60 * 10)
   if (error || !data?.signedUrl) return null
   return data.signedUrl
+}
+
+/** Attach local binaries for backup / accountant export packages. */
+export async function hydrateEvidenceBinaries(
+  records: EvidenceRecord[],
+): Promise<EvidenceRecord[]> {
+  await migrateEmbeddedBinaries()
+  const needIds = records
+    .filter((r) => !r.dataUrl && r.storageProvider === 'local_dev')
+    .map((r) => r.id)
+  const blobs = await getLocalBlobs(needIds)
+  return records.map((r) => {
+    if (r.dataUrl) return r
+    const dataUrl = blobs.get(r.id)
+    return dataUrl ? { ...r, dataUrl } : r
+  })
+}
+
+/**
+ * Persist evidence metadata (+ optional embedded dataUrls from a backup) into
+ * localStorage metadata + IndexedDB binaries.
+ */
+export async function persistEvidenceRecords(records: EvidenceRecord[]): Promise<void> {
+  for (const record of records) {
+    if (record.dataUrl) {
+      await putLocalBlob(record.id, record.dataUrl)
+    }
+  }
+  writeLocal(records.map(stripBinary))
 }
 
 export async function downloadEvidenceFile(record: EvidenceRecord): Promise<void> {

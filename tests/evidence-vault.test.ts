@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { filterEvidence } from '@/features/evidence/services/evidence-vault'
 import type { EvidenceRecord } from '@/features/evidence/types/evidence'
 import {
@@ -26,7 +26,7 @@ function sample(partial: Partial<EvidenceRecord> & Pick<EvidenceRecord, 'id' | '
     mimeType: partial.mimeType ?? 'application/pdf',
     byteSize: partial.byteSize ?? 100,
     processingStatus: 'ready',
-    dataUrl: null,
+    dataUrl: partial.dataUrl !== undefined ? partial.dataUrl : null,
     storagePath: partial.storagePath ?? null,
     storageProvider: partial.storageProvider ?? 'local_dev',
     storageBucket: 'evidence',
@@ -166,5 +166,40 @@ describe('storageLocationLabel', () => {
         storagePath: 'u/2026/id/file.pdf',
       }),
     ).toContain('Private cloud')
+  })
+})
+
+describe('persistEvidenceRecords', () => {
+  it('stores metadata without embedding dataUrl in localStorage', async () => {
+    const { persistEvidenceRecords } = await import('@/features/evidence/services/evidence-vault')
+    const { getLocalBlob } = await import('@/shared/lib/local-blob-store')
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => {
+        store.set(k, v)
+      },
+      removeItem: (k: string) => {
+        store.delete(k)
+      },
+      clear: () => store.clear(),
+      key: () => null,
+      length: 0,
+    })
+
+    await persistEvidenceRecords([
+      sample({
+        id: 'blob-1',
+        title: 'Meal',
+        dataUrl: 'data:image/jpeg;base64,abc',
+        storageProvider: 'local_dev',
+      }),
+    ])
+
+    const raw = store.get('ajx.evidence.vault.v2')
+    expect(raw).toBeTruthy()
+    expect(raw).not.toContain('data:image/jpeg;base64,abc')
+    expect(JSON.parse(raw!)[0].dataUrl).toBeNull()
+    expect(await getLocalBlob('blob-1')).toBe('data:image/jpeg;base64,abc')
   })
 })

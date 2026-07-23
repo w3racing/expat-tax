@@ -52,7 +52,7 @@ Upload · Preview · Rename (title + filename) · Replace file · Delete (soft +
 | Mode | Binary | Metadata |
 |------|--------|----------|
 | Supabase configured | Private `evidence` bucket path `{user_id}/{fy}/{id}/{filename}` | Local vault mirror + `evidence_items` / `evidence_files` when authed |
-| Local / no Supabase | Browser (`dataUrl` in local vault store) | Same client store |
+| Local / no Supabase | IndexedDB blob store (images JPEG-compressed); metadata only in localStorage | Same client metadata store |
 
 ## Drive-ready (not implemented)
 

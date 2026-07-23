@@ -31,7 +31,7 @@ describe('app backup restore', () => {
     mockStorage()
   })
 
-  it('round-trips planner, sample days, and evidence', () => {
+  it('round-trips planner, sample days, and evidence', async () => {
     const planner = emptyPlanner(2026)
     planner.destinations = [{ id: 'au', name: 'Australia', sortOrder: 0 }]
     planner.years[0]!.monthAway = [
@@ -73,15 +73,15 @@ describe('app backup restore', () => {
       ]),
     )
 
-    const backup = collectAppBackup(2026)
+    const backup = await collectAppBackup(2026)
     expect(backup.version).toBe(APP_BACKUP_VERSION)
     expect(backup.sampleDays).toHaveLength(1)
     expect(backup.evidence).toHaveLength(1)
 
     localStorage.clear()
-    restoreAppBackup(backup)
+    await restoreAppBackup(backup)
 
-    const restored = collectAppBackup(2026)
+    const restored = await collectAppBackup(2026)
     expect(restored.sampleDays).toHaveLength(1)
     expect(restored.evidence).toHaveLength(1)
     expect(restored.planner.years[0]?.monthAway[0]?.nights).toBe(10)

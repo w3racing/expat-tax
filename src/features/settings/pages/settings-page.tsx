@@ -85,8 +85,8 @@ export function SettingsPage() {
     }
   }
 
-  const onBackup = () => {
-    const summary = downloadAppBackup(fyEndYear)
+  const onBackup = async () => {
+    const summary = await downloadAppBackup(fyEndYear)
     setBackupMessage(
       `Backup downloaded · ${summary.sampleDayCount} sample days · ${summary.evidenceCount} documents · ${summary.fyYears.length} year(s).`,
     )
@@ -117,7 +117,7 @@ export function SettingsPage() {
     if (!pendingRestore) return
     try {
       const backup = await readBackupFile(pendingRestore.file)
-      const summary = restoreAppBackup(backup)
+      const summary = await restoreAppBackup(backup)
       setFyEndYear(backup.activeFyEndYear)
       setPendingRestore(null)
       setBackupMessage(
