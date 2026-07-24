@@ -240,6 +240,8 @@ export type ClaimReviewLine = {
   description: string
   amountAud: number
   currencyNote?: string
+  /** True when foreign currency has no usable FX snapshot yet (AUD result held at 0). */
+  pendingAud?: boolean
   /** Optional sub-group within a category (e.g. Train / Bus / Taxi under Transport). */
   groupKey?: string
   groupLabel?: string

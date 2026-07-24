@@ -78,6 +78,51 @@ describe('calculation traces (source · calculation · result)', () => {
     ])
   })
 
+  it('marks foreign claims pending when FX rate is missing', () => {
+    const state = fixtureAirlineInternational()
+    const year = state.years[0]!
+    year.apartmentCosts = [
+      {
+        id: 'rent-pending',
+        dateYmd: '2026-07-21',
+        kind: 'rent',
+        description: 'JULY Rent',
+        localAmount: 285000,
+        exchangeRate: 0,
+      },
+    ]
+    year.flights = [
+      {
+        id: 'flight-pending',
+        dateYmd: '2026-07-18',
+        description: 'Tokyo hop',
+        currencyCode: 'JPY',
+        localAmount: 50000,
+        exchangeRate: 0,
+        workPercentage: 100,
+      },
+    ]
+
+    const traces = buildCalculationTraces(state, 2026)
+    const apartment = traces.find((t) => t.id === 'apartment')
+    expect(apartment!.resultAud).toBe(0)
+    expect(apartment!.lines).toEqual([
+      expect.objectContaining({
+        id: 'rent-pending',
+        amountAud: 0,
+        pendingAud: true,
+        currencyNote: 'JPY 285000 · Pending ATO rate',
+      }),
+    ])
+
+    const flights = traces.find((t) => t.id === 'flights')
+    expect(flights!.lines?.[0]).toMatchObject({
+      id: 'flight-pending',
+      pendingAud: true,
+      currencyNote: 'JPY 50000 · Pending ATO rate',
+    })
+  })
+
   it('every trace has source, calculation, and numeric result', () => {
     const traces = buildCalculationTraces(fixtureAirlineInternational(), 2026)
     expect(traces.length).toBeGreaterThan(5)

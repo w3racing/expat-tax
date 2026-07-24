@@ -16,6 +16,27 @@ function transportGroup(kind?: TransportKind): { key: string; label: string } {
   return { key: 'other', label: 'Other transport' }
 }
 
+/** Foreign claim with no snapshotted rate (and no manual AUD override). */
+function isFxPending(opts: {
+  exchangeRate: number
+  manualAud?: boolean
+  amountAud?: number
+}): boolean {
+  if (opts.manualAud && typeof opts.amountAud === 'number') return false
+  return !(opts.exchangeRate > 0)
+}
+
+function foreignCurrencyNote(
+  currencyCode: string,
+  localAmount: number,
+  pending: boolean,
+): string | undefined {
+  const code = currencyCode.toUpperCase()
+  if (code === 'AUD') return undefined
+  const base = `${code} ${localAmount}`
+  return pending ? `${base} · Pending ATO rate` : base
+}
+
 function sortByDate(a: ClaimReviewLine, b: ClaimReviewLine): number {
   const ad = a.dateYmd ?? ''
   const bd = b.dateYmd ?? ''
@@ -39,6 +60,11 @@ export function buildClaimReviewLines(year: TaxYearRecord): ClaimReviewLine[] {
   const lines: ClaimReviewLine[] = []
 
   for (const c of year.otherClaims) {
+    const pendingAud = isFxPending({
+      exchangeRate: c.exchangeRate,
+      manualAud: c.manualAud,
+      amountAud: c.amountAud,
+    })
     lines.push({
       id: c.id,
       category: 'work',
@@ -48,23 +74,34 @@ export function buildClaimReviewLines(year: TaxYearRecord): ClaimReviewLine[] {
         manualAud: c.manualAud,
         amountAud: c.amountAud,
       }),
-      currencyNote: c.currencyCode !== 'AUD' ? `${c.currencyCode} ${c.localAmount}` : undefined,
+      currencyNote: foreignCurrencyNote(c.currencyCode, c.localAmount, pendingAud),
+      pendingAud,
     })
   }
 
   for (const c of year.flights) {
+    const pendingAud = isFxPending({
+      exchangeRate: c.exchangeRate,
+      manualAud: c.manualAud,
+    })
     lines.push({
       id: c.id,
       category: 'flight',
       dateYmd: c.dateYmd,
       description: c.description?.trim() || 'Flight',
       amountAud: claimAud(c.localAmount, c.exchangeRate, c.workPercentage),
-      currencyNote: c.currencyCode !== 'AUD' ? `${c.currencyCode} ${c.localAmount}` : undefined,
+      currencyNote: foreignCurrencyNote(c.currencyCode, c.localAmount, pendingAud),
+      pendingAud,
     })
   }
 
   for (const c of year.transport) {
     const group = transportGroup(c.kind)
+    const pendingAud = isFxPending({
+      exchangeRate: c.exchangeRate,
+      manualAud: c.manualAud,
+      amountAud: c.audAmount,
+    })
     lines.push({
       id: c.id,
       category: 'transport',
@@ -74,7 +111,8 @@ export function buildClaimReviewLines(year: TaxYearRecord): ClaimReviewLine[] {
         manualAud: c.manualAud,
         amountAud: c.audAmount,
       }),
-      currencyNote: c.currencyCode !== 'AUD' ? `${c.currencyCode} ${c.localAmount}` : undefined,
+      currencyNote: foreignCurrencyNote(c.currencyCode, c.localAmount, pendingAud),
+      pendingAud,
       groupKey: group.key,
       groupLabel: group.label,
     })
@@ -94,24 +132,36 @@ export function buildClaimReviewLines(year: TaxYearRecord): ClaimReviewLine[] {
   }
 
   for (const c of year.laundry) {
+    const pendingAud = isFxPending({
+      exchangeRate: c.exchangeRate,
+      manualAud: c.manualAud,
+      amountAud: undefined,
+    })
     lines.push({
       id: c.id,
       category: 'laundry',
       dateYmd: c.dateYmd,
       description: c.description?.trim() || 'Laundry',
       amountAud: foreignToAud(c.localAmount, c.exchangeRate),
-      currencyNote: `JPY ${c.localAmount}`,
+      currencyNote: foreignCurrencyNote('JPY', c.localAmount, pendingAud),
+      pendingAud,
     })
   }
 
   for (const c of year.apartmentCosts) {
+    const pendingAud = isFxPending({
+      exchangeRate: c.exchangeRate,
+      manualAud: c.manualAud,
+      amountAud: undefined,
+    })
     lines.push({
       id: c.id,
       category: 'apartment',
       dateYmd: c.dateYmd,
       description: c.description?.trim() || c.kind,
       amountAud: foreignToAud(c.localAmount, c.exchangeRate),
-      currencyNote: `JPY ${c.localAmount}`,
+      currencyNote: foreignCurrencyNote('JPY', c.localAmount, pendingAud),
+      pendingAud,
     })
   }
 

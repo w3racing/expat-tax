@@ -28,6 +28,9 @@ import {
   summarizeFromPlanner,
 } from '@/features/tax-position/engine'
 import { recomputeAndPersistSummary } from '@/features/tax-position/services/position-service'
+import { removeClaimById } from '@/features/quick-claim/utils/add-claim'
+import type { ClaimReviewLine } from '@/features/tax-position/engine/types'
+import { useUndoToast } from '@/shared/components/ui/undo-toast'
 import { formatAud } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/cn'
 
@@ -60,6 +63,7 @@ export function TaxPositionPage() {
     persistYear,
     persistPlanner,
   } = useTaxPosition()
+  const { showUndo } = useUndoToast()
   const [searchParams, setSearchParams] = useSearchParams()
   const requested = resolveInitialSection(
     searchParams.get('section') ?? searchParams.get('tab'),
@@ -102,11 +106,23 @@ export function TaxPositionPage() {
     }
   }, [searchParams])
 
+  const hasClaimRows =
+    year.otherClaims.length +
+      year.flights.length +
+      year.transport.length +
+      year.carKm.length +
+      year.laundry.length +
+      year.apartmentCosts.length >
+    0
+
   const hasData =
-    summary != null && (summary.totalIncomeAud !== 0 || summary.totalClaimsAud !== 0)
+    summary != null &&
+    (summary.totalIncomeAud !== 0 || summary.totalClaimsAud !== 0 || hasClaimRows)
 
   const material = traces.filter((t) => {
     if (t.id === 'overseas-daily') return false
+    // Keep claim ledgers with rows even when AUD is still pending FX (resultAud ≈ 0).
+    if ((t.lines?.length ?? 0) > 0) return true
     return (
       Math.abs(t.resultAud) > 0.0001 ||
       t.id === 'estimated-tax' ||
@@ -124,6 +140,15 @@ export function TaxPositionPage() {
     if (nextId == null) next.delete('section')
     else next.set('section', nextId)
     setSearchParams(next, { replace: true })
+  }
+
+  const removeClaim = (line: ClaimReviewLine) => {
+    const yearBeforeDelete = year
+    persistYear(removeClaimById(year, line.id))
+    showUndo({
+      message: `Removed “${line.description}”`,
+      onUndo: () => persistYear(yearBeforeDelete),
+    })
   }
 
   if (!summary || !hasData) {
@@ -196,7 +221,7 @@ export function TaxPositionPage() {
 
       <SoftBanner tone="warning">
         Not tax advice and not a lodgement. Expand any row for Source · Calculation · Result —
-        edit income and super here; manage other claims in Claim.
+        edit income and super here; add claims in Claim and remove them from an expanded claim row.
       </SoftBanner>
 
       <AppCard className="space-y-2">
@@ -223,12 +248,14 @@ export function TaxPositionPage() {
         <h2 className="font-display text-lg font-semibold">Year breakdown</h2>
         <p className="text-sm text-muted-foreground">
           Tap a row to expand provenance. Employment, interest, and superannuation edit inline.
+          Remove mistaken claims from an expanded claim row.
         </p>
         {material.map((trace) => (
           <CalculationTraceRow
             key={trace.id}
             expanded={expanded === trace.id}
             trace={trace}
+            onRemoveClaim={isClaimTraceId(trace.id) ? removeClaim : undefined}
             onToggle={() => toggle(trace.id)}
           >
             {trace.id === 'employment-income' ? (

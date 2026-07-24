@@ -2,19 +2,19 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/shared/components/ui/button'
 
 const CLAIM_SECTION_CTAS: Record<string, { label: string; to: string }> = {
-  'other-claims': { label: 'Add or edit in Claim', to: '/claim/work' },
-  flights: { label: 'Add or edit in Claim', to: '/claim/transport/airfares' },
-  transport: { label: 'Add or edit in Claim', to: '/claim/transport' },
-  'car-km': { label: 'Add or edit in Claim', to: '/claim/transport/car' },
-  laundry: { label: 'Add or edit in Claim', to: '/claim/laundry' },
-  apartment: { label: 'Add or edit in Claim', to: '/claim/apartment' },
+  'other-claims': { label: 'Add in Claim', to: '/claim/work' },
+  flights: { label: 'Add in Claim', to: '/claim/transport/airfares' },
+  transport: { label: 'Add in Claim', to: '/claim/transport' },
+  'car-km': { label: 'Add in Claim', to: '/claim/transport/car' },
+  laundry: { label: 'Add in Claim', to: '/claim/laundry' },
+  apartment: { label: 'Add in Claim', to: '/claim/apartment' },
 }
 
 type ClaimSectionCtaProps = {
   traceId: string
 }
 
-/** Points claim ledger rows back to Claim — Tax Position is display + provenance only. */
+/** Points claim ledger rows back to Claim for new entries — remove from Position drill-in. */
 export function ClaimSectionCta({ traceId }: ClaimSectionCtaProps) {
   const cta = CLAIM_SECTION_CTAS[traceId]
   if (!cta) return null

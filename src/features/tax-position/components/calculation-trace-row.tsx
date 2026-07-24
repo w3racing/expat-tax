@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { ChevronDown, Trash2 } from 'lucide-react'
 import type { CalculationTrace } from '@/features/tax-position/engine'
 import type { ClaimReviewLine } from '@/features/tax-position/engine/types'
 import { AppCard } from '@/shared/components/ajx/app-card'
+import { Button } from '@/shared/components/ui/button'
+import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { formatAud, formatDateYmd } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/cn'
 
@@ -12,12 +14,15 @@ type CalculationTraceRowProps = {
   onToggle: () => void
   /** Interactive edit / CTA content shown when expanded (outside the toggle control). */
   children?: ReactNode
+  /** When set, claim lines show a remove control (confirm handled here). */
+  onRemoveClaim?: (line: ClaimReviewLine) => void
 }
 
 type ClaimLineGroup = {
   key: string
   label: string
   amountAud: number
+  pendingAud: boolean
   lines: ClaimReviewLine[]
 }
 
@@ -33,22 +38,34 @@ function groupClaimLines(lines: ClaimReviewLine[]): ClaimLineGroup[] | null {
     const label = line.groupLabel ?? 'Other'
     let group = byKey.get(key)
     if (!group) {
-      group = { key, label, amountAud: 0, lines: [] }
+      group = { key, label, amountAud: 0, pendingAud: true, lines: [] }
       byKey.set(key, group)
       groups.push(group)
     }
     group.lines.push(line)
     group.amountAud += line.amountAud
+    if (!line.pendingAud) group.pendingAud = false
   }
 
   return groups
 }
 
-function ClaimLineItem({ line }: { line: ClaimReviewLine }) {
+function formatClaimAud(amountAud: number, pendingAud?: boolean) {
+  if (pendingAud) return 'Pending'
+  return formatAud(amountAud)
+}
+
+function ClaimLineItem({
+  line,
+  onRemove,
+}: {
+  line: ClaimReviewLine
+  onRemove?: (line: ClaimReviewLine) => void
+}) {
   const dateLabel = formatDateYmd(line.dateYmd)
   return (
     <li className="flex items-start justify-between gap-3 border-b border-border/60 pb-2 last:border-0 last:pb-0">
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         {dateLabel ? (
           <p className="font-medium text-foreground">{dateLabel}</p>
         ) : (
@@ -59,9 +76,23 @@ function ClaimLineItem({ line }: { line: ClaimReviewLine }) {
           <p className="mt-0.5 text-[11px] text-muted-foreground">{line.currencyNote}</p>
         ) : null}
       </div>
-      <p className="shrink-0 text-amount font-medium text-foreground">
-        {formatAud(line.amountAud)}
-      </p>
+      <div className="flex shrink-0 items-start gap-0.5">
+        <p className="text-amount self-start pt-1.5 font-medium text-foreground">
+          {formatClaimAud(line.amountAud, line.pendingAud)}
+        </p>
+        {onRemove ? (
+          <Button
+            aria-label={`Remove claim ${line.description}`}
+            className="text-muted-foreground hover:text-destructive"
+            size="sm"
+            type="button"
+            variant="ghost"
+            onClick={() => onRemove(line)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        ) : null}
+      </div>
     </li>
   )
 }
@@ -71,10 +102,16 @@ export function CalculationTraceRow({
   expanded,
   onToggle,
   children,
+  onRemoveClaim,
 }: CalculationTraceRowProps) {
+  const [pendingDelete, setPendingDelete] = useState<ClaimReviewLine | null>(null)
   const lines = trace.lines ?? []
   const hasLines = lines.length > 0
   const groups = hasLines ? groupClaimLines(lines) : null
+  const pendingCount = lines.filter((line) => line.pendingAud).length
+  const allPending = hasLines && pendingCount === lines.length
+  const somePending = pendingCount > 0
+  const canRemove = onRemoveClaim != null
 
   return (
     <AppCard className={cn('transition-colors', expanded && 'ring-1 ring-border')}>
@@ -90,12 +127,18 @@ export function CalculationTraceRow({
             {expanded
               ? 'Hide detail'
               : hasLines
-                ? `Tap for ${lines.length} claim${lines.length === 1 ? '' : 's'} · source · calculation`
+                ? `Tap for ${lines.length} claim${lines.length === 1 ? '' : 's'}${
+                    somePending
+                      ? ` · ${pendingCount} pending FX`
+                      : ' · source · calculation'
+                  }`
                 : 'Tap for source · calculation · result'}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <p className="text-amount text-sm font-medium">{formatAud(trace.resultAud)}</p>
+          <p className="text-amount text-sm font-medium">
+            {formatClaimAud(trace.resultAud, allPending)}
+          </p>
           <ChevronDown
             aria-hidden
             className={cn(
@@ -118,12 +161,16 @@ export function CalculationTraceRow({
                       <div className="flex items-baseline justify-between gap-3">
                         <p className="text-sm font-semibold text-foreground">{group.label}</p>
                         <p className="shrink-0 text-amount text-sm font-medium text-foreground">
-                          {formatAud(group.amountAud)}
+                          {formatClaimAud(group.amountAud, group.pendingAud)}
                         </p>
                       </div>
                       <ul className="mt-2 space-y-2">
                         {group.lines.map((line) => (
-                          <ClaimLineItem key={line.id} line={line} />
+                          <ClaimLineItem
+                            key={line.id}
+                            line={line}
+                            onRemove={canRemove ? setPendingDelete : undefined}
+                          />
                         ))}
                       </ul>
                     </div>
@@ -132,7 +179,11 @@ export function CalculationTraceRow({
               ) : (
                 <ul className="mt-2 space-y-2">
                   {lines.map((line) => (
-                    <ClaimLineItem key={line.id} line={line} />
+                    <ClaimLineItem
+                      key={line.id}
+                      line={line}
+                      onRemove={canRemove ? setPendingDelete : undefined}
+                    />
                   ))}
                 </ul>
               )}
@@ -150,13 +201,34 @@ export function CalculationTraceRow({
             <div>
               <dt className="text-overline">Result</dt>
               <dd className="mt-0.5 font-medium text-foreground text-amount">
-                {formatAud(trace.resultAud)}
+                {formatClaimAud(trace.resultAud, allPending)}
               </dd>
             </div>
           </dl>
           {children ? <div className="pt-1 text-sm">{children}</div> : null}
         </div>
       ) : null}
+
+      <ConfirmDialog
+        confirmLabel="Remove"
+        description={
+          pendingDelete
+            ? `This removes “${pendingDelete.description}”${
+                pendingDelete.dateYmd ? ` (${formatDateYmd(pendingDelete.dateYmd)})` : ''
+              } from your tax position. You can undo immediately after.`
+            : 'This removes the claim from your tax position. You can undo immediately after.'
+        }
+        destructive
+        open={pendingDelete != null}
+        title="Remove this claim?"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (!pendingDelete || !onRemoveClaim) return
+          const line = pendingDelete
+          setPendingDelete(null)
+          onRemoveClaim(line)
+        }}
+      />
     </AppCard>
   )
 }
