@@ -64,7 +64,9 @@ export function IncomePanel({ year, onChange }: IncomePanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <SectionHeader description="USD employment months · AUD = USD ÷ rate" title="Employment income" />
+        <p className="text-xs text-muted-foreground">
+          USD employment months · AUD = USD ÷ rate
+        </p>
         <Button size="sm" variant="soft" onClick={addMonth}>
           Add month
         </Button>
@@ -196,7 +198,7 @@ export function IncomePanel({ year, onChange }: IncomePanelProps) {
 
       <AppCard>
         <SectionHeader
-          description="Interest, dividends, rental, CGT, and foreign income — edit via import or extend rows later."
+          description="Bank interest edits inline in the Interest income row. Dividends, rental, CGT, and other investment income remain import-only for now."
           title="Investments snapshot"
         />
         <p className="mt-2 text-sm text-muted-foreground">

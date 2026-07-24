@@ -56,8 +56,18 @@ export function buildCalculationTraces(
     {
       id: 'interest-income',
       label: 'Interest income',
-      source: `${year.interestByAccount.length} interest entry(ies)`,
-      calculation: 'Sum of grossInterestAud (AUD).',
+      source:
+        year.interestByAccount.length === 0
+          ? 'No bank interest entries for this FY'
+          : (() => {
+              const labels = year.interestByAccount.map((row) => {
+                const account = state.bankAccounts.find((b) => b.id === row.bankAccountId)
+                return account?.label ?? 'Unassigned account'
+              })
+              const unique = [...new Set(labels)]
+              return `${year.interestByAccount.length} interest entry(ies) · ${unique.join(', ')}`
+            })(),
+      calculation: 'Sum of grossInterestAud (AUD) across bank accounts.',
       resultAud: summary.interestIncomeAud,
       engineVersion: v,
     },
@@ -169,7 +179,7 @@ export function buildCalculationTraces(
     {
       id: 'superannuation',
       label: 'Superannuation',
-      source: 'Year settings',
+      source: 'Financial year superannuation deduction',
       calculation: 'superannuationAud as entered for the FY.',
       resultAud: summary.superannuationAud,
       engineVersion: v,

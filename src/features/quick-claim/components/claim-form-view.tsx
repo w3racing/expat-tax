@@ -40,6 +40,19 @@ function todayYmd() {
   return new Date().toISOString().slice(0, 10)
 }
 
+const LEDGER_TO_SECTION: Record<ClaimFormConfig['ledger'], string> = {
+  flights: 'flights',
+  transport: 'transport',
+  carKm: 'car-km',
+  apartmentCosts: 'apartment',
+  otherClaims: 'other-claims',
+  laundry: 'laundry',
+}
+
+function positionAfterClaim(config: ClaimFormConfig) {
+  return `/position?section=${LEDGER_TO_SECTION[config.ledger]}`
+}
+
 export function ClaimFormView({ config }: ClaimFormViewProps) {
   const navigate = useNavigate()
   const { fyEndYear, year, draftState, persistYear } = useTaxPosition()
@@ -126,7 +139,7 @@ export function ClaimFormView({ config }: ClaimFormViewProps) {
           message: 'Car kilometres claim added',
           onUndo: () => persistYear(removeClaimById(next, claimId)),
         })
-        navigate('/position?tab=expenses')
+        navigate(positionAfterClaim(config))
       } finally {
         setSubmitting(false)
       }
@@ -198,7 +211,7 @@ export function ClaimFormView({ config }: ClaimFormViewProps) {
           : `${config.title} claim added`,
         onUndo: () => persistYear(removeClaimById(next, claimId)),
       })
-      navigate('/position?tab=expenses')
+      navigate(positionAfterClaim(config))
     } finally {
       setSubmitting(false)
     }

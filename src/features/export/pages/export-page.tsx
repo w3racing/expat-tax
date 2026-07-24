@@ -107,7 +107,7 @@ export function ExportPage() {
             Generate PDF &amp; package
           </Button>
           <Button asChild variant="outline">
-            <Link to="/position/summary">Review Tax Position</Link>
+            <Link to="/position">Review Tax Position</Link>
           </Button>
         </div>
 

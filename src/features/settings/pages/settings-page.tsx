@@ -195,7 +195,7 @@ export function SettingsPage() {
         </div>
         {fxMessage ? <p className="text-sm text-muted-foreground">{fxMessage}</p> : null}
         <Button asChild variant="ghost">
-          <Link to="/position?tab=fx">View ATO FX table</Link>
+          <Link to="/position?section=advanced-fx">View ATO FX table</Link>
         </Button>
       </AppCard>
 

@@ -56,7 +56,7 @@ export function DashboardMetrics({ snapshot }: DashboardMetricsProps) {
                 : 'Working paper for this financial year'}
             </p>
             <Button asChild size="sm" variant="soft">
-              <Link to="/position/summary">View tax summary</Link>
+              <Link to="/position">View Tax Position</Link>
             </Button>
           </div>
         }

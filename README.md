@@ -31,8 +31,8 @@ Optional cloud auth — copy `.env.example` to `.env` and set Supabase keys. Wit
 |-------|---------|
 | `/` | Dashboard |
 | `/overnight` | Overnight planner (primary overnight entry) |
-| `/position` | Tax Position |
-| `/position/summary` | Indicative tax summary |
+| `/position` | Tax Position (summary + expandable provenance) |
+| `/position/summary` | Redirects to `/position` |
 | `/evidence` | Evidence organisation |
 | `/export` | Accountant ZIP package |
 | `/migration` | Import planner / evidence |

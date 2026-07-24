@@ -240,4 +240,7 @@ export type ClaimReviewLine = {
   description: string
   amountAud: number
   currencyNote?: string
+  /** Optional sub-group within a category (e.g. Train / Bus / Taxi under Transport). */
+  groupKey?: string
+  groupLabel?: string
 }
