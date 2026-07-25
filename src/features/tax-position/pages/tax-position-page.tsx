@@ -14,6 +14,7 @@ import { InterestIncomeEditor } from '@/features/tax-position/components/interes
 import { FxRatesPanel } from '@/features/tax-position/components/fx-rates-panel'
 import { OvernightClaimPanel } from '@/features/tax-position/components/overnight-claim-panel'
 import { CalculationTraceRow } from '@/features/tax-position/components/calculation-trace-row'
+import { EditClaimDialog } from '@/features/tax-position/components/edit-claim-dialog'
 import { SuperannuationEditor } from '@/features/tax-position/components/superannuation-editor'
 import { YearOptionsPanel } from '@/features/tax-position/components/year-options-panel'
 import {
@@ -29,7 +30,7 @@ import {
 } from '@/features/tax-position/engine'
 import { recomputeAndPersistSummary } from '@/features/tax-position/services/position-service'
 import { removeClaimById } from '@/features/quick-claim/utils/add-claim'
-import type { ClaimReviewLine } from '@/features/tax-position/engine/types'
+import type { ClaimReviewLine, TaxYearRecord } from '@/features/tax-position/engine/types'
 import { useUndoToast } from '@/shared/components/ui/undo-toast'
 import { formatAud } from '@/shared/lib/format'
 import { cn } from '@/shared/lib/cn'
@@ -69,6 +70,7 @@ export function TaxPositionPage() {
     searchParams.get('section') ?? searchParams.get('tab'),
   )
   const [expanded, setExpanded] = useState<string | null>(requested)
+  const [editingClaimId, setEditingClaimId] = useState<string | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(
     requested === 'advanced-fx' || requested === 'advanced-year',
   )
@@ -151,6 +153,15 @@ export function TaxPositionPage() {
     })
   }
 
+  const saveEditedClaim = (next: TaxYearRecord) => {
+    const yearBeforeEdit = year
+    persistYear(next)
+    showUndo({
+      message: 'Claim updated',
+      onUndo: () => persistYear(yearBeforeEdit),
+    })
+  }
+
   if (!summary || !hasData) {
     return (
       <div className="space-y-6">
@@ -221,7 +232,8 @@ export function TaxPositionPage() {
 
       <SoftBanner tone="warning">
         Not tax advice and not a lodgement. Expand any row for Source · Calculation · Result —
-        edit income and super here; add claims in Claim and remove them from an expanded claim row.
+        edit income and super here; add claims in Claim; edit or remove them from an expanded claim
+        row.
       </SoftBanner>
 
       <AppCard className="space-y-2">
@@ -248,13 +260,16 @@ export function TaxPositionPage() {
         <h2 className="font-display text-lg font-semibold">Year breakdown</h2>
         <p className="text-sm text-muted-foreground">
           Tap a row to expand provenance. Employment, interest, and superannuation edit inline.
-          Remove mistaken claims from an expanded claim row.
+          Edit or remove claims from an expanded claim row.
         </p>
         {material.map((trace) => (
           <CalculationTraceRow
             key={trace.id}
             expanded={expanded === trace.id}
             trace={trace}
+            onEditClaim={
+              isClaimTraceId(trace.id) ? (line) => setEditingClaimId(line.id) : undefined
+            }
             onRemoveClaim={isClaimTraceId(trace.id) ? removeClaim : undefined}
             onToggle={() => toggle(trace.id)}
           >
@@ -319,6 +334,16 @@ export function TaxPositionPage() {
         onChange={persistYear}
         onToggleAdvanced={() => setAdvancedOpen((o) => !o)}
         onToggleSection={toggle}
+      />
+
+      <EditClaimDialog
+        claimId={editingClaimId}
+        open={editingClaimId != null}
+        year={year}
+        onOpenChange={(open) => {
+          if (!open) setEditingClaimId(null)
+        }}
+        onSave={saveEditedClaim}
       />
     </div>
   )

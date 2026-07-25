@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/app/providers/auth-provider'
 import { useFy, fyLabel as formatFyLabel } from '@/app/providers/fy-provider'
 import { useTheme } from '@/app/providers/theme-provider'
@@ -16,12 +16,13 @@ import { AppCard } from '@/shared/components/ajx/app-card'
 import { SoftBanner } from '@/shared/components/ajx/soft-banner'
 import { ConfirmDialog } from '@/shared/components/ui/confirm-dialog'
 import { Button } from '@/shared/components/ui/button'
+import { DraftStatus, type DraftSaveState } from '@/shared/components/ui/draft-status'
 import { Input } from '@/shared/components/ui/input'
 import { Label } from '@/shared/components/ui/label'
 import { isSupabaseConfigured } from '@/shared/lib/supabase'
 
 export function SettingsPage() {
-  const { user, signOut, isLocalMode } = useAuth()
+  const { user, signOut, isLocalMode, updateProfile } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { fyEndYear, label, availableYears, setFyEndYear, createOrSelectFy } = useFy()
   const { planner, persistPlanner, draftState } = useTaxPosition()
@@ -30,11 +31,36 @@ export function SettingsPage() {
   const [backupMessage, setBackupMessage] = useState<string | null>(null)
   const [fxMessage, setFxMessage] = useState<string | null>(null)
   const [refreshingFx, setRefreshingFx] = useState(false)
+  const [displayName, setDisplayName] = useState(user?.displayName ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [profileError, setProfileError] = useState<string | null>(null)
+  const [profileDraft, setProfileDraft] = useState<DraftSaveState>('idle')
   const [pendingRestore, setPendingRestore] = useState<{
     summary: AppBackupSummary
     file: File
   } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? '')
+    setEmail(user?.email ?? '')
+  }, [user?.displayName, user?.email])
+
+  const profileDirty =
+    displayName.trim() !== (user?.displayName ?? '').trim() ||
+    (isLocalMode && email.trim() !== (user?.email ?? '').trim())
+
+  const onSaveProfile = async () => {
+    setProfileError(null)
+    setProfileDraft('saving')
+    try {
+      await updateProfile({ displayName, email })
+      setProfileDraft('saved')
+    } catch (err) {
+      setProfileDraft('error')
+      setProfileError(err instanceof Error ? err.message : 'Could not save your details.')
+    }
+  }
 
   const onCreateFy = () => {
     setFyError(null)
@@ -133,7 +159,7 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Financial year, ATO FX, accountant export, backup, account, and appearance."
+        description="Financial year, ATO FX, audit package, accountant export, backup, account, and appearance."
         title="Settings"
       />
 
@@ -200,6 +226,17 @@ export function SettingsPage() {
       </AppCard>
 
       <AppCard className="space-y-3">
+        <p className="text-sm font-semibold">ATO Audit Package</p>
+        <p className="text-sm text-muted-foreground">
+          Audit readiness for the active year, then generate an Audit Report PDF and sectioned
+          evidence ZIP suitable for your tax agent or an ATO information request.
+        </p>
+        <Button asChild variant="soft">
+          <Link to="/settings/audit">Open Audit Package</Link>
+        </Button>
+      </AppCard>
+
+      <AppCard className="space-y-3">
         <p className="text-sm font-semibold">Accountant export</p>
         <p className="text-sm text-muted-foreground">
           Once a year — generate a PDF summary and supporting ZIP for your registered tax agent.
@@ -236,19 +273,71 @@ export function SettingsPage() {
         </Button>
       </AppCard>
 
-      <AppCard className="space-y-2">
-        <p className="text-sm font-semibold">Account</p>
+      <AppCard className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-sm font-semibold">Account</p>
+          <DraftStatus state={profileDraft} />
+        </div>
         <p className="text-sm text-muted-foreground">
-          {user?.displayName} · {user?.email}
+          Used on accountant exports and shown in the app. {isLocalMode
+            ? 'Stored on this device until cloud sign-in is set up.'
+            : 'Name syncs with your Google account profile.'}
         </p>
-        <p className="text-xs text-muted-foreground">
-          {isLocalMode || !isSupabaseConfigured
-            ? 'Local mode — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for cloud auth.'
-            : 'Signed in via Supabase.'}
-        </p>
-        <Button variant="outline" onClick={() => void signOut()}>
-          Sign out
-        </Button>
+        <div className="grid max-w-md gap-3">
+          <div className="grid gap-2">
+            <Label htmlFor="account-name">Name</Label>
+            <Input
+              autoComplete="name"
+              id="account-name"
+              value={displayName}
+              onChange={(e) => {
+                setDisplayName(e.target.value)
+                setProfileDraft('idle')
+                setProfileError(null)
+              }}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="account-email">Email</Label>
+            <Input
+              autoComplete="email"
+              id="account-email"
+              inputMode="email"
+              readOnly={!isLocalMode}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                if (!isLocalMode) return
+                setEmail(e.target.value)
+                setProfileDraft('idle')
+                setProfileError(null)
+              }}
+            />
+            {!isLocalMode ? (
+              <p className="text-xs text-muted-foreground">Email comes from your Google sign-in.</p>
+            ) : null}
+          </div>
+          {profileError ? <p className="text-sm text-destructive">{profileError}</p> : null}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              disabled={!profileDirty || profileDraft === 'saving'}
+              type="button"
+              onClick={() => void onSaveProfile()}
+            >
+              Save details
+            </Button>
+            <Button variant="outline" onClick={() => void signOut()}>
+              Sign out
+            </Button>
+          </div>
+        </div>
+        {isLocalMode || !isSupabaseConfigured ? (
+          <p className="text-xs text-muted-foreground">
+            Local mode — cloud sync is optional and not required for the MVP.
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Signed in via Supabase.</p>
+        )}
       </AppCard>
 
       <AppCard className="space-y-3">

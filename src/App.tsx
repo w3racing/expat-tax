@@ -56,6 +56,9 @@ const ExportPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/features/settings/pages/settings-page').then((m) => ({ default: m.SettingsPage })),
 )
+const AuditPackagePage = lazy(() =>
+  import('@/features/audit').then((m) => ({ default: m.AuditPackagePage })),
+)
 const MigrationWizardPage = lazy(() =>
   import('@/features/migration').then((m) => ({ default: m.MigrationWizardPage })),
 )
@@ -111,6 +114,7 @@ export function App() {
                 />
                 <Route element={<ExportPage />} path="export" />
                 <Route element={<SettingsPage />} path="settings" />
+                <Route element={<AuditPackagePage />} path="settings/audit" />
                 <Route element={<MigrationWizardPage />} path="migration" />
                 <Route element={<MigrationAdminPage />} path="settings/migration" />
                 <Route element={<DesignSystemPage />} path="design-system" />

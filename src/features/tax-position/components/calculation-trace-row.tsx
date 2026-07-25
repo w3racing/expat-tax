@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { ChevronDown, Trash2 } from 'lucide-react'
+import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
 import type { CalculationTrace } from '@/features/tax-position/engine'
 import type { ClaimReviewLine } from '@/features/tax-position/engine/types'
 import { AppCard } from '@/shared/components/ajx/app-card'
@@ -14,6 +14,8 @@ type CalculationTraceRowProps = {
   onToggle: () => void
   /** Interactive edit / CTA content shown when expanded (outside the toggle control). */
   children?: ReactNode
+  /** When set, claim lines show an edit control. */
+  onEditClaim?: (line: ClaimReviewLine) => void
   /** When set, claim lines show a remove control (confirm handled here). */
   onRemoveClaim?: (line: ClaimReviewLine) => void
 }
@@ -57,9 +59,11 @@ function formatClaimAud(amountAud: number, pendingAud?: boolean) {
 
 function ClaimLineItem({
   line,
+  onEdit,
   onRemove,
 }: {
   line: ClaimReviewLine
+  onEdit?: (line: ClaimReviewLine) => void
   onRemove?: (line: ClaimReviewLine) => void
 }) {
   const dateLabel = formatDateYmd(line.dateYmd)
@@ -80,6 +84,18 @@ function ClaimLineItem({
         <p className="text-amount self-start pt-1.5 font-medium text-foreground">
           {formatClaimAud(line.amountAud, line.pendingAud)}
         </p>
+        {onEdit ? (
+          <Button
+            aria-label={`Edit claim ${line.description}`}
+            className="text-muted-foreground hover:text-foreground"
+            size="sm"
+            type="button"
+            variant="ghost"
+            onClick={() => onEdit(line)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+        ) : null}
         {onRemove ? (
           <Button
             aria-label={`Remove claim ${line.description}`}
@@ -102,6 +118,7 @@ export function CalculationTraceRow({
   expanded,
   onToggle,
   children,
+  onEditClaim,
   onRemoveClaim,
 }: CalculationTraceRowProps) {
   const [pendingDelete, setPendingDelete] = useState<ClaimReviewLine | null>(null)
@@ -111,6 +128,7 @@ export function CalculationTraceRow({
   const pendingCount = lines.filter((line) => line.pendingAud).length
   const allPending = hasLines && pendingCount === lines.length
   const somePending = pendingCount > 0
+  const canEdit = onEditClaim != null
   const canRemove = onRemoveClaim != null
 
   return (
@@ -169,6 +187,7 @@ export function CalculationTraceRow({
                           <ClaimLineItem
                             key={line.id}
                             line={line}
+                            onEdit={canEdit ? onEditClaim : undefined}
                             onRemove={canRemove ? setPendingDelete : undefined}
                           />
                         ))}
@@ -182,6 +201,7 @@ export function CalculationTraceRow({
                     <ClaimLineItem
                       key={line.id}
                       line={line}
+                      onEdit={canEdit ? onEditClaim : undefined}
                       onRemove={canRemove ? setPendingDelete : undefined}
                     />
                   ))}

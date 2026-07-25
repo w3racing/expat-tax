@@ -7,6 +7,10 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import {
+  applyProfileDetails,
+  type ProfileDetailsInput,
+} from '@/features/auth/utils/profile-details'
 import { getSupabase, isSupabaseConfigured } from '@/shared/lib/supabase'
 
 export type AuthUser = {
@@ -21,6 +25,7 @@ type AuthContextValue = {
   isLocalMode: boolean
   signInWithGoogle: () => Promise<void>
   signInLocal: (email?: string) => Promise<void>
+  updateProfile: (input: ProfileDetailsInput) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -115,6 +120,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(localUser)
   }, [])
 
+  const updateProfile = useCallback(async (input: ProfileDetailsInput) => {
+    const current = user
+    if (!current) {
+      throw Object.assign(new Error('Not signed in'), { code: 'AUTH_FAILED' })
+    }
+
+    const result = applyProfileDetails(current, input, { allowEmailEdit: isLocalMode })
+    if (!result.ok) {
+      throw Object.assign(new Error(result.error), { code: 'VALIDATION' })
+    }
+
+    const next = result.user
+
+    if (isLocalMode) {
+      localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(next))
+      setUser(next)
+      return
+    }
+
+    const supabase = getSupabase()
+    if (!supabase) {
+      throw Object.assign(new Error('Supabase not configured'), { code: 'AUTH_FAILED' })
+    }
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: next.displayName },
+    })
+    if (error) {
+      throw Object.assign(error, { code: 'AUTH_FAILED' })
+    }
+    setUser(next)
+  }, [user, isLocalMode])
+
   const signOut = useCallback(async () => {
     const supabase = getSupabase()
     if (supabase) {
@@ -125,8 +162,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ user, loading, isLocalMode, signInWithGoogle, signInLocal, signOut }),
-    [user, loading, isLocalMode, signInWithGoogle, signInLocal, signOut],
+    () => ({
+      user,
+      loading,
+      isLocalMode,
+      signInWithGoogle,
+      signInLocal,
+      updateProfile,
+      signOut,
+    }),
+    [user, loading, isLocalMode, signInWithGoogle, signInLocal, updateProfile, signOut],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

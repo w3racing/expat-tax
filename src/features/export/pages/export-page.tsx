@@ -52,8 +52,11 @@ export function ExportPage() {
       />
 
       <SoftBanner tone="info">
-        MVP delivers the accountant summary PDF. Later: audit packages, accountant portal, and full
-        evidence bundles.
+        Need a full ATO-ready evidence pack? Use{' '}
+        <Link className="font-medium text-foreground underline-offset-2 hover:underline" to="/settings/audit">
+          ATO Audit Package
+        </Link>{' '}
+        in Settings for the sectioned ZIP and readiness dashboard.
       </SoftBanner>
 
       {exp.error ? <ErrorBanner code="EXPORT_FAILED" onAction={() => void exp.generate()} /> : null}
